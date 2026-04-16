@@ -1,0 +1,9 @@
+[data-testid="stAppViewBlockContainer"] {
+    padding-top: 0rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.stMarkdown h1, .stMarkdown h2 .stMarkdown h3{
+    margin-top: 0;
+}
