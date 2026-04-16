@@ -56,7 +56,7 @@ with st.sidebar:
 
     st.sidebar.markdown(f"""
                 <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/app2" target="_self"
+                        <a href="/app" target="_self"
                         style="display: inline-block; overflow:hidden; border-radius:32px;">
                         <img src="data:image/png;base64,{img_home}" "width:50px;display:block;margin:0 auto;">
                 </a>
