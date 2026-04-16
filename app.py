@@ -152,4 +152,5 @@ with col2:
 
 st.set_page_config(page_title="Main", layout='wide')
 
-
+st.title("PROVERIM RABOTAET LI ATO")
+st.title("TEST PYCHARM")
