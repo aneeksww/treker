@@ -7,14 +7,11 @@ import bcrypt
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
 
-
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-
 def check_password(password, hashed):
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
-
 
 # ---------------- 1. НАСТРОЙКИ СТРАНИЦЫ И НАВИГАЦИЯ ----------------
 st.set_page_config(page_title="Profile", layout="wide")
