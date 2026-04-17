@@ -40,15 +40,7 @@ with col2:
     )
 
 
-#панель управления
-img_menu = get_base64_img("images\menu.jpg")
-img_home = get_base64_img("images\home.jpg")
-img_fix = get_base64_img("images\settings.jpg")
-img_profile = get_base64_img("images\profile.jpg")
-img_ach = get_base64_img("images\stats.jpg")
-img_contacts = get_base64_img("images\contacts.jpg")
 
-img_trek = get_base64_img("images\label1.png")
 
 
 
