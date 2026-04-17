@@ -1,7 +1,7 @@
 import streamlit as st
 import base64
 
-from pages.app2 import get_base64_img
+#from pages.app2 import get_base64_img
 
 st.set_page_config (
     page_title = "Profile",
