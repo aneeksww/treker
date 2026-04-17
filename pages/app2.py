@@ -1,4 +1,3 @@
-import section
 import streamlit as st
 # from utils import local_css
 import base64
