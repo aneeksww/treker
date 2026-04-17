@@ -107,7 +107,7 @@ def auth_modal():
 
         if st.button("Зарегистрироваться", key="reg_btn"):
             if not all([nick.strip(), contact.strip(), p1.strip(), p2.strip()]):
-                st.error("Заполни все поля")
+                st.error("Заполните все поля")
             elif p1 != p2:
                 st.error("Пароли не совпадают")
             else:

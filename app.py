@@ -3,45 +3,6 @@ import base64
 from datetime import datetime
 
 import streamlit as st
-import bcrypt
-import sqlite3
-
-def register_user(username, password):
-    bytes_pw = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed_pw = bcrypt.hashpw(bytes_pw, salt).decode('utf-8')
-
-    try:
-        conn = sqlite3.connect('treker_bd.db')
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "INSERT INTO user (login, password) VALUES (?, ?)",
-            (username, hashed_pw)
-        )
-
-        conn.commit()
-        conn.close()
-        return True
-
-    except sqlite3.IntegrityError:
-        return False
-
-with st.form("registrtion_form"):
-    new_username = st.text_input("Логин")
-    new_password = st.text_input("Пароль", type = "password")
-    submit_button = st.form_submit_button("Зарегаться")
-
-    if submit_button:
-        if new_username and new_password:
-            success = register_user(new_username, new_password)
-
-        if success:
-            st.success("уСПЕШНО")
-        else:
-            st.error("Уже есть")
-    else:
-        st.warning("Заполните")
 
 local_css("styles/style.css")
 def local_css(style):
