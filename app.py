@@ -4,7 +4,6 @@ from datetime import datetime
 
 import streamlit as st
 
-
 local_css("styles/style.css")
 def local_css(style):
     with open(style) as f:
