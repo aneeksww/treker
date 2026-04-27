@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="Profile", layout="wide")
+st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="expanded")
 
 # ---------------- 1. НАВИГАЦИЯ ----------------
 nav = st.query_params.get("nav")
@@ -21,6 +21,22 @@ hr { display: none !important; }
 .stApp { background: transparent !important; }
 
 .page-title { text-align: center; font-size: 28px; font-weight: 700; color: #334455; margin: 20px 0 30px; }
+
+section[data-testid="stSidebar"] {
+    min-width: 220px !important;
+    width: 220px !important;
+    max-width: 220px !important;
+    transform: none !important;
+    visibility: visible !important;
+}
+
+section[data-testid="stSidebar"] > div {
+    width: 100% !important;
+}
+
+[data-testid="stSidebarCollapseButton"] {
+        visibility: hidden;
+    }
 
 .profile-card {
     max-width: 420px; margin: 0 auto;
