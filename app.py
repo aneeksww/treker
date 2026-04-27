@@ -5,7 +5,7 @@ import os
 import calendar
 
 # ---------------- КОНФИГ ----------------
-st.set_page_config(page_title="Main", layout="wide")
+st.set_page_config(page_title="Main", layout="wide", initial_sidebar_state="expanded")
 
 def local_css(style_path):
     if os.path.exists(style_path):
