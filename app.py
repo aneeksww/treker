@@ -1,388 +1,397 @@
 import streamlit as st
-import base64
-from datetime import date, datetime, timedelta
+import sqlite3
 import os
-import calendar
+from datetime import date, datetime, timedelta
 
-# ---------------- КОНФИГ ----------------
-st.set_page_config(page_title="Main", layout="wide", initial_sidebar_state="expanded")
+# ---------------- 1. КОНФИГУРАЦИЯ ----------------
+st.set_page_config(page_title="Habit Tracker", layout="wide", initial_sidebar_state="expanded")
+
+# Инициализация сессии (ДОЛЖНА БЫТЬ В САМОМ НАЧАЛЕ)
+if "user" not in st.session_state:
+    st.session_state.user = None
+
 
 def local_css(style_path):
     if os.path.exists(style_path):
         with open(style_path, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+
 local_css("styles/style.css")
 
-# ---------------- ГЛОБАЛЬНЫЕ СТИЛИ ----------------
+
+# ---------------- 2. БАЗА ДАННЫХ ----------------
+def get_db_connection():
+    return sqlite3.connect('treker_bd.db', check_same_thread=False)
+
+
+def init_db():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS habits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            duration INTEGER NOT NULL,
+            description TEXT,
+            icon_key TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS habit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            habit_id INTEGER NOT NULL,
+            log_date TEXT NOT NULL,
+            UNIQUE(habit_id, log_date)
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+init_db()
+
+# ---------------- 5. НАДЕЖНЫЙ САЙДБАР ----------------
+with st.sidebar:
+    # Статичный бургер (используем HTML + Material Icons класс)
+    st.markdown("""
+        <div class="burger-container">
+            <div class="nav-tile">
+                <i class="material-icons burger-icon">menu</i>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Навигация через Material Icons (названия берем с fonts.google.com/icons)
+    st.page_link("app.py", label="Home", icon=":material/home:")
+    st.page_link("pages/profile2.py", label="Profile", icon=":material/person:")
+    st.page_link("pages/settings2.py", label="Settings", icon=":material/settings:")
+    st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
+
+# ---------------- 4. ПРОВЕРКА АВТОРИЗАЦИИ ----------------
+if not st.session_state.user:
+    st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.info("Чтобы увидеть свои привычки, нужно войти в аккаунт.")
+        if st.button("Перейти к входу", use_container_width=True, type="primary"):
+            st.switch_page("pages/profile2.py")  # Нативный переход!
+    st.stop()
+
+# Если дошли сюда — юзер залогинен
+USER_ID = st.session_state.user.get('id', 1)
+
+# ---------------- 5. СТИЛИ ----------------
 st.markdown("""
 <style>
-header, footer, #MainMenu { visibility: hidden; display: none; }
-.main > div { padding: 0 !important; }
-[data-testid="stSidebarCollapseButton"] { visibility: hidden; }
 
-.page-header {
-    text-align: center; margin: 30px 0 25px 0; font-size: 32px; font-weight: 700;
-    color: #334455; font-family: Tahoma, sans-serif;
+/* 1. Общие настройки сайдбара */
+[data-testid="stSidebarNav"] {display: none;}
+
+section[data-testid="stSidebar"] {
+    width: 150px !important;
+    min-width: 150px !important;
 }
 
+/* 2. Базовый стиль для всех плиток (и ссылок, и бургера) */
+.nav-tile, [data-testid="stSidebar"] .stPageLink a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 80px !important;
+    height: 80px !important;
+    margin: 12px auto !important;
+    border-radius: 20px !important;
+    background-color: #8fa4bc !important; /* Цвет по умолчанию */
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    text-decoration: none !important;
+    color: white !important;
+}
+
+/* 3. Масштабирование иконок (Material Symbols) */
+/* Таргет для иконок внутри st.page_link */
+[data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] {
+    font-size: 65px !important; /* РАЗМЕР ИКОНКИ ТУТ */
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+}
+
+/* 3. Скрываем текст и стандартные элементы Streamlit */
+[data-testid="stSidebar"] .stPageLink a div p {
+    display: none !important;
+}
+
+/* Размер иконок Material */
+[data-testid="stSidebar"] .stPageLink a [data-testid="stWidgetIcon"] {
+    font-size: 75px !important; /* Увеличь это число для теста */
+    width: 45px !important;
+    height: 45px !important;
+    line-height: 45px !important;
+}
+.burger-icon {
+    font-size: 35px !important;
+    margin: 0 !important;
+}
+
+/* 4. Эффекты при наведении */
+[data-testid="stSidebar"] .stPageLink a:hover {
+    background-color: #70869d !important; /* Чуть темнее при наведении */
+    transform: scale(1.05);
+}
+
+/* 5. ПОДСВЕТКА АКТИВНОЙ СТРАНИЦЫ (Самый высокий приоритет) */
+[data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
+    background-color: #FF1493 !important; /* Твой синий для активной страницы */
+    box-shadow: 0 4px 15px rgba(91, 141, 190, 0.4) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+header, footer, #MainMenu { visibility: hidden; display: none; }
+
+.stButton > button {
+    background-color: #6B7B94 !important;
+    color: white !important;
+    border-radius: 12px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: 0.2s ease;
+}
+.stButton > button:hover {
+    background-color: #6B7B94 !important;
+    transform: scale(1.02);
+}
+
+.stSlider > div > div > div > div {
+    background: #6B7B94 !important;
+}
+.stSlider [data-baseweb="slider"] div[role="slider"] {
+    background: #6B7B94 !important;
+    border: 2px solid #6B7B94 !important;
+}
+
+.page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
+.habits-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 20px; }
+.habit-card {
+    background: #F2F2F7; border-radius: 24px; width: 210px; height: 230px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; transition: 0.2s ease; border: 1px solid #d0dce8;
+}
+.habit-avatar {
+    width: 80px; height: 80px; border-radius: 50%; background: #B8C5D9; 
+    display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; padding: 0 10px; }
+.habit-meta { color: #6B7B94; font-size: 12px; margin-top: 5px; }
+.progress-bar { position: absolute; bottom: 12px; left: 20px; right: 20px; height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: #5B8DBE; transition: width 0.3s; }
+.check-btn {
+    position: absolute; top: 15px; right: 15px; width: 28px; height: 28px;
+    border-radius: 50%; border: 2px solid #6B7B94; display: flex; align-items: center; justify-content: center;
+}
+.check-btn.checked { background: #5B8DBE; border-color: #5B8DBE; color: white; }
+.check-btn.checked::after { content: '✓'; font-weight: bold; }
+
+/*иконки прости господи*/
 div[role="radiogroup"] {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
-    margin-top: 10px;
+    grid-template-columns: repeat(5, 40px);
+    justify-content: center;
+
+    gap: 20px;
+    margin: 0 auto;
+    width: fit-content;
+}
+div[role="radiogroup"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
 }
 div[role="radiogroup"] label {
-    background: #F2F2F7;
-    border: 2px solid transparent;
-    border-radius: 18px;
-    padding: 14px;
-    text-align: center;
+    width: 80px;
+    height: 80px;
+    background: #EAF4FF;
+    border-radius: 16px;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: 0.2s;
+
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+div[role="radiogroup"] input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+div[role="radiogroup"] label > div:first-child {
+    display: none;
+}
+div[role="radiogroup"] label > div:last-child {
+    font-size: 80px;
+    line-height: 30px;
+    display: flex;
     align-items: center;
     justify-content: center;
 }
 div[role="radiogroup"] label:hover {
-    background: #E9F2FF;
-    transform: scale(1.05);
+    background: #D6E9FF;
 }
-div[role="radiogroup"] label:has(input:checked) {
-    border: 2px solid #007AFF;
-    background: #E5F0FF;
-    box-shadow: 0 6px 18px rgba(0,122,255,0.15);
+div[role="radiogroup"] input:checked + div {
+    background: #4DA6FF;
+    border-radius: 16px;
 }
-div[role="radiogroup"] input[type="radio"] { display: none; }
-div[role="radiogroup"] label span { font-size: 34px; line-height: 1; }
+div[role="radiogroup"] input:checked + div span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-.habits-grid {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 20px;
-}
-.habit-card {
-    background: #F2F2F7; border-radius: 24px; width: 210px; height: 230px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.habit-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-.habit-avatar {
-    width: 90px; height: 90px; border-radius: 50%; background: #B8C5D9; overflow: hidden;
-    display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
-}
-.habit-name {
-    color: #334455; font-size: 15px; font-weight: 600; text-align: center; padding: 0 10px;
-    line-height: 1.3; max-height: 40px; overflow: hidden; display: -webkit-box;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-}
-.habit-meta { color: #6B7B94; font-size: 12px; margin-top: 6px; }
-.progress-bar {
-    position: absolute; bottom: 14px; left: 20px; right:20px; height: 6px;
-    background: #E0E5EC; width: calc(100% - 40px); border-radius: 999px; overflow: hidden;
-}
-.progress-fill { height: 100%; background: #5B8DBE; border-radius: 999px; transition: width 0.3s ease; }
-
-.check-btn {
-    position: absolute; bottom: 14px; right: 20px; width: 34px; height: 34px;
-    border-radius: 50%; background: rgba(255,255,255,0.9); border: 2px solid #6B7B94;
-    display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;
-}
-.check-btn:hover { background: white; border-color: #5B8DBE; transform: scale(1.05); }
-.check-btn.checked { background: #5B8DBE; border-color: #5B8DBE; color: white; font-weight: bold; }
-.check-btn.checked::after { content: '✓'; }
-
-section[data-testid="stSidebar"] { min-width: 220px !important; width: 220px !important; max-width: 220px !important; }
-button[data-testid="stBaseButton-primary"] {
-    background-color: #5B8DBE !important; border: none !important; color: white !important;
-    border-radius: 12px !important; font-weight: 600 !important; transition: all 0.3s ease;
-}
-button[data-testid="stBaseButton-primary"]:hover {
-    background-color: #4a7aa3 !important; transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(91, 141, 190, 0.4) !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- НАВИГАЦИЯ ----------------
-nav = st.query_params.get("nav")
-if nav == "profile":
-    st.switch_page("pages/profile2.py")
-elif nav == "settings":
-    st.switch_page("pages/settings2.py")
-elif nav == "contacts":
-    st.switch_page("pages/contacts2.py")
-
-active_page = nav or "app"
-
-with st.sidebar:
-    st.markdown(f"""
-    <div id="sb-nav" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding-top: 20px;">
-        <div style="width:90px;height:90px;background:#8FA4BC;border-radius:20px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" style="width:38px;height:38px;stroke:#334455;stroke-width:2.2;fill:none;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </div>
-        <a href="?nav=app" target="_self" class="{'active' if active_page == 'app' else ''}" style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;background:#C8D1DB;border-radius:20px;text-decoration:none;transition:0.25s;cursor:pointer;">
-            <svg viewBox="0 0 24 24" style="width:38px;height:38px;stroke:#334455;stroke-width:2.2;fill:none;"><path d="M3 10l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
-        </a>
-        <a href="?nav=profile" target="_self" class="{'active' if active_page == 'profile' else ''}" style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;background:#C8D1DB;border-radius:20px;text-decoration:none;transition:0.25s;cursor:pointer;">
-            <svg viewBox="0 0 24 24" style="width:38px;height:38px;stroke:#334455;stroke-width:2.2;fill:none;"><circle cx="12" cy="8" r="4"/><path d="M4 20c2-4 14-4 16 0"/></svg>
-        </a>
-        <a href="?nav=settings" target="_self" class="{'active' if active_page == 'settings' else ''}" style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;background:#C8D1DB;border-radius:20px;text-decoration:none;transition:0.25s;cursor:pointer;">
-            <svg viewBox="0 0 24 24" style="width:38px;height:38px;stroke:#334455;stroke-width:2.2;fill:none;"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        </a>
-        <a href="?nav=contacts" target="_self" class="{'active' if active_page == 'contacts' else ''}" style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;background:#C8D1DB;border-radius:20px;text-decoration:none;transition:0.25s;cursor:pointer;">
-            <svg viewBox="0 0 24 24" style="width:38px;height:38px;stroke:#334455;stroke-width:2.2;fill:none;"><path d="M4 4h16v12H7l-3 3z"/></svg>
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ---------------- ЗАГОЛОВОК ----------------
-st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=True)
-
-# ---------------- STATE & PATHS ----------------
-if "habits" not in st.session_state:
-    st.session_state.habits = []
-if "selected_img" not in st.session_state:
-    st.session_state.selected_img = None
-
+# ---------------- 6. ФУНКЦИИ И ДИАЛОГИ ----------------
 ICONS = {
     "run": "🏃🏻‍♂️", "water": "💧", "sleep": "😴", "study": "📚", "gym": "🏋️‍♂️",
-    "food": "🍎", "walk": "🚶‍♂️", "meditate": "🧘‍♂️", "target": "🎯", "analyse": "📊"
+    "food": "🍎", "walk": "🚶‍♂️", "meditate": "🧘‍♂️", "target": "🎯", "analyse": "📊",
+    "time":"⏰", "health":"💊"
 }
 
-# ---------------- DIALOG ----------------
-@st.dialog("Добавление привычки")
-def add_habit_dialog():
-    st.markdown("<h3 style='text-align:center; margin:0 0 20px 0;'>Новая привычка</h3>", unsafe_allow_html=True)
-    name = st.text_input("Название:", max_chars=70)
-    duration = st.selectbox("Длительность (дней):", list(range(1, 31)), index=6)
-    desc = st.text_area("Описание:")
 
-    st.markdown("<h4 style='text-align:center; margin:15px 0 5px 0;'>Выберите иконку</h4>", unsafe_allow_html=True)
-
-    icon_keys = list(ICONS.keys())
-    icon_values = list(ICONS.values())
-    current_idx = icon_keys.index(st.session_state.selected_img) if st.session_state.selected_img in icon_keys else 0
-
-    selected_emoji = st.radio(
-        "icon_select",
-        options=icon_values,
-        index=current_idx,
-        label_visibility="collapsed"
-    )
-    st.session_state.selected_img = icon_keys[icon_values.index(selected_emoji)]
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("Добавить привычку", use_container_width=True, key="dlg_add", type="primary"):
-        if not name.strip():
-            st.error("Введите название привычки")
-        else:
-            st.session_state.habits.insert(0, {
-                "history": [],
-                "name": name.strip(),
-                "duration": duration,
-                "description": desc.strip(),
-                "image_path": st.session_state.selected_img,
-                "progress": 0,
-                "last_check_date": None
-            })
-            st.session_state.selected_img = None
-            st.rerun()
-
-# ---------------- КНОПКА ДОБАВИТЬ ----------------
-col_left, col_center, col_right = st.columns([1, 4, 1])
-with col_center:
-    if st.button("Добавить привычку", key="main_add", use_container_width=True, type="primary"):
-        add_habit_dialog()
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ---------------- ФУНКЦИИ ----------------
 def calculate_streaks(history):
-    if not history:
-        return 0, 0
-    dates = sorted(set(history))
-    dates = [datetime.fromisoformat(d).date() for d in dates]
-
-    max_streak = 1
-    cur = 1
-    for i in range(1, len(dates)):
-        if (dates[i] - dates[i - 1]).days == 1:
-            cur += 1
-            max_streak = max(max_streak, cur)
-        else:
-            cur = 1
-
+    if not history: return 0, 0
+    dates = sorted([datetime.fromisoformat(d).date() for d in history])
+    max_s = cur_s = 0
+    if dates:
+        cur_s = 1
+        for i in range(1, len(dates)):
+            if (dates[i] - dates[i - 1]).days == 1:
+                cur_s += 1
+            else:
+                max_s = max(max_s, cur_s)
+                cur_s = 1
+        max_s = max(max_s, cur_s)
     today = date.today()
     streak = 0
-    d = today
-    while d.isoformat() in history:
+    check_date = today
+    history_set = set(history)
+    while check_date.isoformat() in history_set:
         streak += 1
-        d -= timedelta(days=1)
-    return streak, max_streak
+        check_date -= timedelta(days=1)
+    return streak, max_s
 
-@st.dialog(" ")
-def habit_dialog(habit, i):
-    today = date.today()
-    key_month, key_year = f"month_{i}", f"year_{i}"
-    st.session_state.setdefault(key_month, today.month)
-    st.session_state.setdefault(key_year, today.year)
-    month, year = st.session_state[key_month], st.session_state[key_year]
 
-    st.markdown(f"<h3 style='text-align:center; margin-bottom:10px;'>{habit['name'].upper()} : КАЛЕНДАРЬ</h3>", unsafe_allow_html=True)
+@st.dialog("Новая цель")
+def add_habit_dialog():
+    name = st.text_input("Название:")
+    duration = st.slider("Цель (дней):", 1, 100, 30)
+    desc = st.text_area("Зачем это вам?")
+    if "selected_icon" not in st.session_state:
+        st.session_state.selected_icon = None
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
-        if st.button("←", key=f"prev_{i}"):
-            st.session_state[key_month] = 12 if month == 1 else month - 1
-            st.session_state[key_year] = year - 1 if month == 1 else year
+    selected_emoji = st.radio(
+        "Выберите иконку",
+        list(ICONS.values()),
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
+    icon_key = [k for k, v in ICONS.items() if v == selected_emoji][0]
+
+    if not name.strip() : st.warning("Введите название привычки")
+    elif not icon_key : st.warning("Выберите иконку")
+
+    if st.button("Создать", use_container_width=True, type="primary"):
+        if name.strip():
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("INSERT INTO habits (user_id, name, duration, description, icon_key) VALUES (?, ?, ?, ?, ?)",
+                      (USER_ID, name.strip(), duration, desc.strip(), icon_key))
+            conn.commit()
+            conn.close()
             st.rerun()
-    with col2:
-        st.markdown(f"<div style='text-align:center; font-weight:600'>{calendar.month_name[month]} {year}</div>", unsafe_allow_html=True)
-    with col3:
-        if st.button("→", key=f"next_{i}"):
-            st.session_state[key_month] = 1 if month == 12 else month + 1
-            st.session_state[key_year] = year + 1 if month == 12 else year
-            st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    history = habit.get("history", [])
-    cal = calendar.Calendar(firstweekday=0)
-    month_days = cal.monthdayscalendar(year, month)
-    week_days = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"]
-    cols = st.columns(7)
-    for i_d, d in enumerate(week_days):
-        cols[i_d].markdown(f"<div style='text-align:center; font-weight:600; color:#667'>{d}</div>", unsafe_allow_html=True)
 
-    for week in month_days:
-        cols = st.columns(7)
-        for i_d, day in enumerate(week):
-            if day == 0:
-                cols[i_d].markdown(" ")
-            else:
-                d_obj = date(year, month, day)
-                d_str = d_obj.isoformat()
-                done = d_str in history
-                is_today = d_obj == today
-                bg = "#5B8DBE" if done else "#F1F4F8"
-                color = "white" if done else "#334455"
-                border = "2px solid #5B8DBE" if is_today else "1px solid transparent"
-                cols[i_d].markdown(f"""
-                    <div style="margin:4px; padding:10px; border-radius:10px; background:{bg}; color:{color};
-                                text-align:center; font-weight:600; border:{border}; position:relative;">
-                        {day}
-                        {"<div style='position:absolute; bottom:4px; right:6px; font-size:12px;'>✓</div>" if done else ""}
-                    </div>
-                """, unsafe_allow_html=True)
-
+@st.dialog("Статистика")
+def habit_dialog(habit_id, name, history):
+    st.write(f"### {name}")
     streak, max_streak = calculate_streaks(history)
-    today_done = today.isoformat() in history
-    flame = lambda active: f'<svg width="24" height="24" viewBox="0 0 24 24"><path fill="{"#2735F5" if active else "#BCBCC2"}" d="M13 2C13 2 8 8 8 12a4 4 0 0 0 8 0c0-3-3-7-3-10z"/><path fill="{"#FFA726" if active else "#BCBCC2"}" d="M12 14a2 2 0 0 0 2-2c0-1.5-1.5-3-2-4-0.5 1-2 2.5-2 4a2 2 0 0 0 2 2z"/></svg>'
+    col1, col2 = st.columns(2)
+    col1.metric("Текущая серия", f"{streak} дн.")
+    col2.metric("Рекорд", f"{max_streak} дн.")
 
-    c1, c2 = st.columns(2)
-    c1.markdown(f'<div style="display:flex;align-items:center;gap:8px;">{flame(today_done)} <b>{streak}</b> текущий</div>', unsafe_allow_html=True)
-    c2.markdown(f'<div style="display:flex;align-items:center;gap:8px;">{flame(True)} <b>{max_streak}</b> максимум</div>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🗑Удалить привычку", type="secondary", use_container_width=True):
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("DELETE FROM habits WHERE id = ?", (habit_id,))
+        c.execute("DELETE FROM habit_logs WHERE habit_id = ?", (habit_id,))
+        conn.commit()
+        conn.close()
+        st.rerun()
 
-    if st.button("Экспорт в PDF", use_container_width=True, key=f"export_{i}"):
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-        from reportlab.lib import colors
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import mm
 
-        file_path = f"/tmp/{habit['name']}_{month}.pdf"
-        doc = SimpleDocTemplate(file_path, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle("TitleCustom", parent=styles["Title"], alignment=1, textColor=colors.HexColor("#334455"))
-        day_style = ParagraphStyle("Day", alignment=1, fontSize=10)
+# ---------------- 7. ГЛАВНЫЙ ЭКРАН ----------------
+st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=True)
 
-        elements = [Paragraph(f"{habit['name'].upper()} — КАЛЕНДАРЬ", title_style), Spacer(1, 12)]
-        table_data = [week_days]
-        for week in month_days:
-            row = []
-            for day in week:
-                if day == 0: row.append("")
-                else:
-                    d_str = date(year, month, day).isoformat()
-                    done = d_str in history
-                    row.append(Paragraph(f"<b>{day}</b>{'<br/>✓' if done else ''}", day_style))
-            table_data.append(row)
+col_l, col_c, col_r = st.columns([1, 2, 1])
+with col_c:
+    if st.button("Добавить привычку", use_container_width=True, type="primary"):
+        add_habit_dialog()
 
-        table = Table(table_data, colWidths=[25 * mm] * 7, rowHeights=[18 * mm] * len(table_data))
-        style = TableStyle([
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E3EAF3")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#334455")),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#D0D7E2")),
-        ])
-        for r_idx, week in enumerate(month_days, 1):
-            for c_idx, day in enumerate(week):
-                if day and date(year, month, day).isoformat() in history:
-                    style.add("BACKGROUND", (c_idx, r_idx), (c_idx, r_idx), colors.HexColor("#5B8DBE"))
-                    style.add("TEXTCOLOR", (c_idx, r_idx), (c_idx, r_idx), colors.white)
-        table.setStyle(style)
-        elements.append(table)
-        elements.append(Spacer(1, 16))
-        streak, max_streak = calculate_streaks(history)
-        elements.append(Paragraph(f"Текущий стрик: {streak}", styles["Normal"]))
-        elements.append(Paragraph(f"Максимальный стрик: {max_streak}", styles["Normal"]))
-        doc.build(elements)
+# Загрузка данных
+conn = get_db_connection()
+c = conn.cursor()
+c.execute("""
+    SELECT h.id, h.name, h.duration, h.icon_key,
+    (SELECT COUNT(*) FROM habit_logs WHERE habit_id = h.id) as progress,
+    (SELECT 1 FROM habit_logs WHERE habit_id = h.id AND log_date = ?) as done_today
+    FROM habits h WHERE h.user_id = ?
+""", (date.today().isoformat(), USER_ID))
+habits = c.fetchall()
+conn.close()
 
-        with open(file_path, "rb") as f:
-            st.download_button("Скачать PDF", f, file_name=f"{habit['name']}.pdf", mime="application/pdf")
-
-# ---------------- ПРИВЫЧКИ ----------------
-today_str = date.today().isoformat()
-if st.session_state.habits:
+if habits:
     st.markdown('<div class="habits-grid">', unsafe_allow_html=True)
-    for i, habit in enumerate(st.session_state.habits):
-        can_mark = habit["last_check_date"] != today_str
-        progress_pct = int((habit["progress"] / habit["duration"]) * 100) if habit["duration"] > 0 else 0
-        icon = ICONS.get(habit["image_path"], "✨")
+    for h_id, h_name, h_dur, h_icon, h_prog, is_done in habits:
+        progress_pct = min(100, int((h_prog / h_dur) * 100))
+        icon = ICONS.get(h_icon, "✨")
 
         st.markdown(f"""
         <div class="habit-card">
-            <div class="habit-avatar" onclick="document.querySelector('#st-key-open_{i} button').click(); return false;">
+            <div class="check-btn {'checked' if is_done else ''}"></div>
+            <div class="habit-avatar" onclick="document.querySelector('#st-key-btn_open_{h_id} button').click();">
                 <div style="font-size:38px;">{icon}</div>
             </div>
-            <div class="habit-name">{habit['name']}</div>
-            <div class="habit-meta">{habit['progress']}/{habit['duration']} дн. ({progress_pct}%)</div>
-            <div class="check-btn {'checked' if not can_mark else ''}"></div>
+            <div class="habit-name">{h_name}</div>
+            <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
             <div class="progress-bar"><div class="progress-fill" style="width:{progress_pct}%"></div></div>
         </div>""", unsafe_allow_html=True)
 
-        if can_mark:
-            if st.button("✓", key=f"check_{i}"):
-                habit["progress"] = min(habit["progress"] + 1, habit["duration"])
-                habit["last_check_date"] = today_str
-                habit.setdefault("history", []).append(today_str)
+        if not is_done:
+            if st.button("Выполнить", key=f"btn_check_{h_id}", use_container_width=True):
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute("INSERT OR IGNORE INTO habit_logs (habit_id, log_date) VALUES (?, ?)",
+                          (h_id, date.today().isoformat()))
+                conn.commit()
+                conn.close()
                 st.rerun()
-        if st.button("hidden_open", key=f"open_{i}"):
-            st.session_state.open_dialog = i
-            st.rerun()
+
+        if st.button("Детали", key=f"btn_open_{h_id}"):
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("SELECT log_date FROM habit_logs WHERE habit_id = ?", (h_id,))
+            hist = [r[0] for r in c.fetchall()]
+            conn.close()
+            habit_dialog(h_id, h_name, hist)
+
     st.markdown('</div>', unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 4, 1])
-    with col2:
-        if st.button("Отметить все сегодня", key="mark_all", use_container_width=True):
-            updated = False
-            for h in st.session_state.habits:
-                if h["last_check_date"] != today_str:
-                    h["progress"] = min(h["progress"] + 1, h["duration"])
-                    h["last_check_date"] = today_str
-                    h.setdefault("history", []).append(today_str)
-                    updated = True
-            if updated: st.rerun()
 else:
-    st.markdown("""<div style='text-align: center; color: #888; margin-top: 80px; font-size: 16px;'>
-        Нажмите кнопку выше, чтобы добавить первую привычку
-    </div>""", unsafe_allow_html=True)
-
-st.session_state.setdefault("open_dialog", None)
-if st.session_state.open_dialog is not None:
-    idx = st.session_state.open_dialog
-    if idx < len(st.session_state.habits):
-        habit_dialog(st.session_state.habits[idx], idx)
+    st.write("---")
+    st.info("Привычек пока нет. Самое время начать что-то новое!")
