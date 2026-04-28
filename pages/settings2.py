@@ -1,101 +1,26 @@
 import streamlit as st
-import base64
 
-from pages.app2 import get_base64_img
+st.set_page_config(page_title="Настройки", layout="wide", initial_sidebar_state="collapsed")
 
-st.set_page_config (
-    page_title = "Settings",
-    layout = "wide"
-)
+from app import inject_custom_css_and_sidebar, get_db_connection
+inject_custom_css_and_sidebar("settings")
 
-st.title("Settings")
+st.markdown('<div class="page-title">НАСТРОЙКИ</div>', unsafe_allow_html=True)
 
-#панель управления
-img_menu = get_base64_img("images\menu.jpg")
-img_home = get_base64_img("images\home.jpg")
-img_fix = get_base64_img("images\settings.jpg")
-img_profile = get_base64_img("images\profile.jpg")
-img_ach = get_base64_img("images\stats.jpg")
-img_contacts = get_base64_img("images\contacts.jpg")
+if not st.session_state.get("user"):
+    st.warning("Войдите в аккаунт для доступа к настройкам.")
+    st.stop()
 
-img_trek = get_base64_img("images\label1.png")
+st.session_state.settings['allow_skips'] = st.toggle("Разрешить пропуск дня (двойное нажатие)", value=st.session_state.settings['allow_skips'])
+st.session_state.settings['week_start'] = st.selectbox("Начало недели", options=[0, 6], format_func=lambda x: "Понедельник" if x == 0 else "Воскресенье", index=0 if st.session_state.settings['week_start'] == 0 else 1)
+st.selectbox("Размер шрифта", ["Стандартный", "Крупный"])
 
-with st.sidebar:
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"][aria-expanded-true] > div:first-child {
-                width: 400px; /* Задайте желаемую ширину */
-            }
-            [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-                /* Дополнительные стили для сжатой панели */
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-    st.markdown(
-        f'''
-            <style>
-                .sidebar .sidebar-content {{
-                    width: 60px;
-                }}
-            </style>
-        ''',
-        unsafe_allow_html=True
-    )
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                            <img src="data:image/png;base64,{img_menu}" style="width:120px;border-radius:30px;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/app" target="_self"
-                        style="display: inline-block; overflow:hidden; border-radius:32px;">
-                        <img src="data:image/png;base64,{img_home}" "width:50px;display:block;margin:0 auto;">
-                </a>
-                </div>
-                """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/profile2" target="_self"
-                            style="display: inline-block; overflow:hidden; border-radius:32px;">
-                            <img src="data:image/png;base64,{img_profile}" "width:50px;display:block;margin:0 auto;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-                <div style="border-radius:15px;overflow:hidden;">
-                    <a href="/settings2" target="_self"
-                        style="display: inline-block; overflow:hidden; border-radius:32px;">
-                        <img src="data:image/png;base64,{img_fix}" "width:50px;display:block;margin:0 auto;">
-                    </a>
-                </div>
-                """,
-                unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/contacts2" target="_self"
-                            style="display: inline-block; overflow:hidden; border-radius:32px;">
-                            <img src="data:image/png;base64,{img_contacts}" "width:50px;display:block;margin:0 auto;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
+st.write("---")
+if st.button("Сбросить все привычки", type="primary"):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM habit_logs WHERE habit_id IN (SELECT id FROM habits WHERE user_id=?)", (st.session_state.user['id'],))
+    c.execute("DELETE FROM habits WHERE user_id=?", (st.session_state.user['id'],))
+    conn.commit()
+    conn.close()
+    st.success("Привычки успешно удалены.")
