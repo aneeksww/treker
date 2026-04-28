@@ -2,9 +2,10 @@ import streamlit as st
 import sqlite3
 import bcrypt
 
+
 # ---------------- 1. КОНФИГУРАЦИЯ ----------------
-# initial_sidebar_state="expanded" гарантирует, что сайдбар будет открыт
 st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="expanded")
+
 
 # ---------------- 2. ИНИЦИАЛИЗАЦИЯ СЕССИИ И БД ----------------
 if "user" not in st.session_state:
@@ -24,10 +25,76 @@ def check_password(password, hashed):
 
 
 # ---------------- 3. ГЛОБАЛЬНЫЕ СТИЛИ (CSS) ----------------
-# Я убрал скрытие header и MainMenu, чтобы сайдбар корректно работал
+
 st.markdown("""
 <style>
-    :root { --primary-color: #7B2CBF !important; }
+    /* 1. Общие настройки сайдбара */
+    [data-testid="stSidebarNav"] {display: none;}
+
+    section[data-testid="stSidebar"] {
+        width: 150px !important;
+        min-width: 150px !important;
+    }
+
+    /* 2. Базовый стиль для всех плиток (и ссылок, и бургера) */
+    .nav-tile, [data-testid="stSidebar"] .stPageLink a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 80px !important;
+        height: 80px !important;
+        margin: 12px auto !important;
+        border-radius: 20px !important;
+        background-color: #8fa4bc !important; /* Цвет по умолчанию */
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+        text-decoration: none !important;
+        color: white !important;
+    }
+
+    /* 3. Масштабирование иконок (Material Symbols) */
+    /* Таргет для иконок внутри st.page_link */
+    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] {
+        font-size: 65px !important; /* РАЗМЕР ИКОНКИ ТУТ */
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: white !important;
+    }
+
+    /* 3. Скрываем текст и стандартные элементы Streamlit */
+    [data-testid="stSidebar"] .stPageLink a div p {
+        display: none !important;
+    }
+
+    /* Размер иконок Material */
+    [data-testid="stSidebar"] .stPageLink a [data-testid="stWidgetIcon"] {
+        font-size: 75px !important; /* Увеличь это число для теста */
+        width: 45px !important;
+        height: 45px !important;
+        line-height: 45px !important;
+    }
+    .burger-icon {
+        font-size: 35px !important;
+        margin: 0 !important;
+    }
+
+    /* 4. Эффекты при наведении */
+    [data-testid="stSidebar"] .stPageLink a:hover {
+        background-color: #70869d !important; /* Чуть темнее при наведении */
+        transform: scale(1.05);
+    }
+
+    /* 5. ПОДСВЕТКА АКТИВНОЙ СТРАНИЦЫ (Самый высокий приоритет) */
+    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
+        background-color: #FF1493 !important; /* Твой синий для активной страницы */
+        box-shadow: 0 4px 15px rgba(91, 141, 190, 0.4) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+:root { --primary-color: #7B2CBF !important; }
     .main .block-container { padding: 10px 20px !important; background: transparent !important; }
     .stApp { background: transparent !important; }
 
@@ -62,7 +129,9 @@ st.markdown("""
     /* Вкладки диалога */
     div[data-testid="stTabs"] button { color: #5a6b82 !important; }
     div[data-testid="stTabs"] button[aria-selected="true"] { color: #7B2CBF !important; border-bottom: 2px solid #7B2CBF !important; }
+
 </style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
 
 
@@ -124,17 +193,22 @@ def auth_modal():
 
 # ---------------- 5. НАДЕЖНЫЙ САЙДБАР ----------------
 with st.sidebar:
-    st.markdown("<h3 style='text-align: center;'>Навигация</h3>", unsafe_allow_html=True)
-    st.write("")  # Отступ
+    # Статичный бургер (используем HTML + Material Icons класс)
+    st.markdown("""
+        <div class="burger-container">
+            <div class="nav-tile">
+                <i class="material-icons burger-icon">menu</i>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Родные ссылки Streamlit — не сбрасывают сессию!
-    st.page_link("app.py", label="Главная", icon="🏠")
-    st.page_link("pages/profile2.py", label="Профиль", icon="👤")
-    st.page_link("pages/settings2.py", label="Настройки", icon="⚙️")
-    st.page_link("pages/contacts2.py", label="Контакты", icon="📞")
+    # Навигация через Material Icons (названия берем с fonts.google.com/icons)
+    st.page_link("app.py", label="Home", icon=":material/home:")
+    st.page_link("pages/profile2.py", label="Profile", icon=":material/person:")
+    st.page_link("pages/settings2.py", label="Settings", icon=":material/settings:")
+    st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
 
 # ---------------- 6. ОСНОВНОЙ КОНТЕНТ ----------------
-st.markdown('<div class="page-title">Профиль</div>', unsafe_allow_html=True)
 
 if st.session_state.user:
     st.markdown(f"""
