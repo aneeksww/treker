@@ -12,13 +12,12 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 
+# ---------------- 0. ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ ----------------
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
 
-
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
 
 def check_password(password, hashed):
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
