@@ -54,13 +54,33 @@ init_db()
 
 # ---------------- 5. НАДЕЖНЫЙ САЙДБАР ----------------
 with st.sidebar:
-    st.markdown('<div class="nav-tile"><i class="material-icons" style="font-size:40px; color:white;">menu</i></div>',
-                unsafe_allow_html=True)
+    # Статичный бургер (используем HTML + Material Icons класс)
+    st.markdown("""
+        <div class="burger-container">
+            <div class="nav-tile">
+                <i class="material-icons burger-icon">menu</i>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Навигация через Material Icons (названия берем с fonts.google.com/icons)
     st.page_link("app.py", label="Home", icon=":material/home:")
     st.page_link("pages/profile2.py", label="Profile", icon=":material/person:")
     st.page_link("pages/settings2.py", label="Settings", icon=":material/settings:")
     st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
 
+# ---------------- 4. ПРОВЕРКА АВТОРИЗАЦИИ ----------------
+if not st.session_state.user:
+    st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.info("Чтобы увидеть свои привычки, нужно войти в аккаунт.")
+        if st.button("Перейти к входу", use_container_width=True, type="primary"):
+            st.switch_page("pages/profile2.py")  # Нативный переход!
+    st.stop()
+
+# Если дошли сюда — юзер залогинен
+USER_ID = st.session_state.user.get('id', 1)
 
 # ---------------- 5. СТИЛИ ----------------
 st.markdown("""
@@ -68,17 +88,68 @@ st.markdown("""
 
 /* 1. Общие настройки сайдбара */
 [data-testid="stSidebarNav"] {display: none;}
-    section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
-    .nav-tile, [data-testid="stSidebar"] .stPageLink a {
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        width: 85px !important; height: 85px !important; margin: 15px auto !important;
-        border-radius: 20px !important; background-color: #8fa4bc !important;
-        transition: all 0.3s ease !important; text-decoration: none !important;
-    }
-    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] { font-size: 45px !important; color: white !important; }
-    [data-testid="stSidebar"] .stPageLink a div p { display: none !important; }
-    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] { background-color: #FF1493 !important; }
 
+section[data-testid="stSidebar"] {
+    width: 150px !important;
+    min-width: 150px !important;
+}
+
+/* 2. Базовый стиль для всех плиток (и ссылок, и бургера) */
+.nav-tile, [data-testid="stSidebar"] .stPageLink a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 80px !important;
+    height: 80px !important;
+    margin: 12px auto !important;
+    border-radius: 20px !important;
+    background-color: #8fa4bc !important; /* Цвет по умолчанию */
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    text-decoration: none !important;
+    color: white !important;
+}
+
+/* 3. Масштабирование иконок (Material Symbols) */
+/* Таргет для иконок внутри st.page_link */
+[data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] {
+    font-size: 65px !important; /* РАЗМЕР ИКОНКИ ТУТ */
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+}
+
+/* 3. Скрываем текст и стандартные элементы Streamlit */
+[data-testid="stSidebar"] .stPageLink a div p {
+    display: none !important;
+}
+
+/* Размер иконок Material */
+[data-testid="stSidebar"] .stPageLink a [data-testid="stWidgetIcon"] {
+    font-size: 75px !important; /* Увеличь это число для теста */
+    width: 45px !important;
+    height: 45px !important;
+    line-height: 45px !important;
+}
+.burger-icon {
+    font-size: 35px !important;
+    margin: 0 !important;
+}
+
+/* 4. Эффекты при наведении */
+[data-testid="stSidebar"] .stPageLink a:hover {
+    background-color: #70869d !important; /* Чуть темнее при наведении */
+    transform: scale(1.05);
+}
+
+/* 5. ПОДСВЕТКА АКТИВНОЙ СТРАНИЦЫ (Самый высокий приоритет) */
+[data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
+    background-color: #FF1493 !important; /* Твой синий для активной страницы */
+    box-shadow: 0 4px 15px rgba(91, 141, 190, 0.4) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 header, footer, #MainMenu { visibility: hidden; display: none; }
@@ -105,27 +176,78 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
 }
 
 .page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
-.habits-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 20px; }
+
+/* ---------------- 3. КАРТОЧКИ (ОПТИМИЗИРОВАНО) ---------------- */
+.habits-grid {
+    display: block;
+    padding: 20px;
+}
+
 .habit-card {
-    background: #F2F2F7; border-radius: 24px; width: 210px; height: 230px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; transition: 0.2s ease; border: 1px solid #d0dce8;
+    background: #F2F2F7;
+    border-radius: 24px;
+    width: 210px;
+    height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d0dce8;
+    position: relative;
+    margin-bottom: 10px; /* Отступ до кнопок */
 }
+
 .habit-avatar {
-    width: 80px; height: 80px; border-radius: 50%; background: #B8C5D9; 
-    display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
-    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: #B8C5D9;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
 }
-.habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; padding: 0 10px; }
+
+.habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; }
 .habit-meta { color: #6B7B94; font-size: 12px; margin-top: 5px; }
-.progress-bar { position: absolute; bottom: 12px; left: 20px; right: 20px; height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden; }
-.progress-fill { height: 100%; background: #5B8DBE; transition: width 0.3s; }
-.check-btn {
-    position: absolute; top: 15px; right: 15px; width: 28px; height: 28px;
-    border-radius: 50%; border: 2px solid #6B7B94; display: flex; align-items: center; justify-content: center;
+
+.progress-bar {
+    position: absolute; bottom: 12px; left: 20px; right: 20px;
+    height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden;
 }
-.check-btn.checked { background: #5B8DBE; border-color: #5B8DBE; color: white; }
-.check-btn.checked::after { content: '✓'; font-weight: bold; }
+.progress-fill { height: 100%; background: #5B8DBE; }
+
+/* ---------------- 4. НОВЫЕ КНОПКИ ПОД КАРТОЧКОЙ ---------------- */
+/* Универсальный фикс для всех маленьких кнопок под карточкой */
+div.stButton > button[id^="st-key-btn_info_"],
+div.stButton > button[id^="st-key-btn_check_"],
+div.stButton > button[id^="st-key-btn_done_"],
+div.stButton > button[id^="st-key-btn_done_"]:disabled {
+    height: 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important; /* Строго ограничиваем ширину */
+    border-radius: 10px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important; /* Чтобы disabled кнопка не была слишком бледной */
+}
+
+/* Принудительный размер иконки внутри всех состояний */
+div.stButton > button[id^="st-key-btn_"] [data-testid="stWidgetIcon"],
+div.stButton > button[id^="st-key-btn_"] span {
+    font-size: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Цвета (чтобы не слетели) */
+div.stButton > button[id^="st-key-btn_info_"] { background-color: #E0E5EC !important; color: #334455 !important; }
+div.stButton > button[id^="st-key-btn_check_"] { background-color: #5B8DBE !important; color: white !important; }
+div.stButton > button[id^="st-key-btn_done_"]:disabled { background-color: #4954A6 !important; color: white !important; border: none !important; }
 
 /*иконки прости господи*/
 div[role="radiogroup"] {
@@ -183,21 +305,7 @@ div[role="radiogroup"] input:checked + div span {
 }
 
 </style>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
-
-# ---------------- 4. ПРОВЕРКА АВТОРИЗАЦИИ ----------------
-if not st.session_state.user:
-    st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.info("Чтобы увидеть свои привычки, нужно войти в аккаунт.")
-        if st.button("Перейти к входу", use_container_width=True, type="primary"):
-            st.switch_page("pages/profile2.py")  # Нативный переход!
-    st.stop()
-
-# Если дошли сюда — юзер залогинен
-USER_ID = st.session_state.user.get('id', 1)
 
 # ---------------- 6. ФУНКЦИИ И ДИАЛОГИ ----------------
 ICONS = {
@@ -300,41 +408,51 @@ habits = c.fetchall()
 conn.close()
 
 if habits:
-    st.markdown('<div class="habits-grid">', unsafe_allow_html=True)
-    for h_id, h_name, h_dur, h_icon, h_prog, is_done in habits:
+    cols = st.columns(3)  # Основная сетка карточек
+
+    for idx, (h_id, h_name, h_dur, h_icon, h_prog, is_done) in enumerate(habits):
         progress_pct = min(100, int((h_prog / h_dur) * 100))
-        icon = ICONS.get(h_icon, "✨")
+        emoji_icon = ICONS.get(h_icon, "✨")
 
-        st.markdown(f"""
-        <div class="habit-card">
-            <div class="check-btn {'checked' if is_done else ''}"></div>
-            <div class="habit-avatar" onclick="document.querySelector('#st-key-btn_open_{h_id} button').click();">
-                <div style="font-size:38px;">{icon}</div>
-            </div>
-            <div class="habit-name">{h_name}</div>
-            <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
-            <div class="progress-bar"><div class="progress-fill" style="width:{progress_pct}%"></div></div>
-        </div>""", unsafe_allow_html=True)
+        with cols[idx % 3]:
+            # 1. HTML карточки
+            st.markdown(f"""
+                <div class="habit-card">
+                    <div class="habit-avatar"><div style="font-size:38px;">{emoji_icon}</div></div>
+                    <div class="habit-name">{h_name}</div>
+                    <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:{progress_pct}%"></div></div>
+                </div>
+            """, unsafe_allow_html=True)
 
-        if not is_done:
-            if st.button("Выполнить", key=f"btn_check_{h_id}", use_container_width=True):
-                conn = get_db_connection()
-                c = conn.cursor()
-                c.execute("INSERT OR IGNORE INTO habit_logs (habit_id, log_date) VALUES (?, ?)",
-                          (h_id, date.today().isoformat()))
-                conn.commit()
-                conn.close()
-                st.rerun()
+            # 2. Тот самый блок с 4 колонками
+            b_col_space1, b_col1, b_col2, b_col_space2 = st.columns([1, 2, 2, 1])
 
-        if st.button("Детали", key=f"btn_open_{h_id}"):
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute("SELECT log_date FROM habit_logs WHERE habit_id = ?", (h_id,))
-            hist = [r[0] for r in c.fetchall()]
-            conn.close()
-            habit_dialog(h_id, h_name, hist)
+            with b_col1:
+                # Кнопка инфо (Календарь)
+                if st.button("", icon=":material/calendar_month:", key=f"btn_info_{h_id}"):
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute("SELECT log_date FROM habit_logs WHERE habit_id = ?", (h_id,))
+                    hist = [r[0] for r in c.fetchall()]
+                    conn.close()
+                    habit_dialog(h_id, h_name, hist)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+            with b_col2:
+                # Кнопка действия (Чек или Галочка)
+                if not is_done:
+                    if st.button("", icon=":material/check_circle:", key=f"btn_check_{h_id}"):
+                        conn = get_db_connection()
+                        c = conn.cursor()
+                        c.execute("INSERT OR IGNORE INTO habit_logs (habit_id, log_date) VALUES (?, ?)",
+                                  (h_id, date.today().isoformat()))
+                        conn.commit()
+                        conn.close()
+                        st.rerun()
+                else:
+                    # Кнопка выполнено (disabled)
+                    st.button("", icon=":material/task_alt:", key=f"btn_done_{h_id}", disabled=True)
+
 else:
     st.write("---")
     st.info("Привычек пока нет. Самое время начать что-то новое!")

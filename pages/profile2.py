@@ -2,12 +2,9 @@ import streamlit as st
 import sqlite3
 import bcrypt
 
+
 # ---------------- 1. КОНФИГУРАЦИЯ ----------------
 st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="expanded")
-
-if "user" not in st.session_state:
-    st.session_state.user = None
-
 
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
