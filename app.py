@@ -52,116 +52,137 @@ def init_db():
 
 init_db()
 
-# ---------------- 3. НАДЕЖНЫЙ САЙДБАР ----------------
+# ---------------- 5. НАДЕЖНЫЙ САЙДБАР ----------------
 with st.sidebar:
-    # Статичный бургер (используем HTML + Material Icons класс)
-    st.markdown("""
-        <div class="burger-container">
-            <div class="nav-tile">
-                <i class="material-icons burger-icon">menu</i>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Навигация через Material Icons (названия берем с fonts.google.com/icons)
+    st.markdown('<div class="nav-tile"><i class="material-icons" style="font-size:40px; color:white;">menu</i></div>',
+                unsafe_allow_html=True)
     st.page_link("app.py", label="Home", icon=":material/home:")
     st.page_link("pages/profile2.py", label="Profile", icon=":material/person:")
     st.page_link("pages/settings2.py", label="Settings", icon=":material/settings:")
-    st.page_link("pages/contacts2.py", label="Contacts", icon=":material/chat:")
-
-
+    st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
 
 
 # ---------------- 5. СТИЛИ ----------------
 st.markdown("""
 <style>
-    /* 1. Скрываем стандартную навигацию */
-    [data-testid="stSidebarNav"] {display: none;}
 
-    section[data-testid="stSidebar"] {
-        width: 150px !important;
-        min-width: 150px !important;
-    }
-
-    /* 2. Базовый стиль плиток */
+/* 1. Общие настройки сайдбара */
+[data-testid="stSidebarNav"] {display: none;}
+    section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
     .nav-tile, [data-testid="stSidebar"] .stPageLink a {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 80px !important;
-        height: 80px !important;
-        margin: 12px auto !important;
-        border-radius: 20px !important;
-        background-color: #8fa4bc !important;
-        transition: all 0.3s ease !important;
-        border: none !important;
-        text-decoration: none !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        width: 85px !important; height: 85px !important; margin: 15px auto !important;
+        border-radius: 20px !important; background-color: #8fa4bc !important;
+        transition: all 0.3s ease !important; text-decoration: none !important;
     }
-
-    /* 3. Масштабирование иконок (Material Symbols) */
-    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] {
-        font-size: 45px !important;
-        width: auto !important;
-        height: auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: white !important;
-    }
-
-    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] > * {
-        font-size: 45px !important; 
-        width: 45px !important;
-        height: 45px !important;
-    }
-
-    .burger-icon { font-size: 40px !important; color: white !important; }
-
-    /* 4. Скрываем лишний текст */
+    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] { font-size: 45px !important; color: white !important; }
     [data-testid="stSidebar"] .stPageLink a div p { display: none !important; }
+    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] { background-color: #FF1493 !important; }
 
-    /* 5. Эффекты ховера и активной страницы */
-    [data-testid="stSidebar"] .stPageLink a:hover {
-        background-color: #70869d !important;
-        transform: scale(1.05);
-    }
+}
 
-    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
-        background-color: #FF1493 !important;
-        box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4) !important;
-        border: 2px solid rgba(255, 255, 255, 0.3) !important;
-    }
+header, footer, #MainMenu { visibility: hidden; display: none; }
 
-    .burger-container { display: flex; justify-content: center; padding-top: 10px; }
+.stButton > button {
+    background-color: #6B7B94 !important;
+    color: white !important;
+    border-radius: 12px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: 0.2s ease;
+}
+.stButton > button:hover {
+    background-color: #6B7B94 !important;
+    transform: scale(1.02);
+}
 
+.stSlider > div > div > div > div {
+    background: #6B7B94 !important;
+}
+.stSlider [data-baseweb="slider"] div[role="slider"] {
+    background: #6B7B94 !important;
+    border: 2px solid #6B7B94 !important;
+}
 
-    /* --- СТИЛИ ГЛАВНОЙ СТРАНИЦЫ (КАРТОЧКИ ПРИВЫЧК) --- */
-    header, footer, #MainMenu { visibility: hidden; display: none; }
-    .page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
+.page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
+.habits-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 20px; }
+.habit-card {
+    background: #F2F2F7; border-radius: 24px; width: 210px; height: 230px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; transition: 0.2s ease; border: 1px solid #d0dce8;
+}
+.habit-avatar {
+    width: 80px; height: 80px; border-radius: 50%; background: #B8C5D9; 
+    display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; padding: 0 10px; }
+.habit-meta { color: #6B7B94; font-size: 12px; margin-top: 5px; }
+.progress-bar { position: absolute; bottom: 12px; left: 20px; right: 20px; height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: #5B8DBE; transition: width 0.3s; }
+.check-btn {
+    position: absolute; top: 15px; right: 15px; width: 28px; height: 28px;
+    border-radius: 50%; border: 2px solid #6B7B94; display: flex; align-items: center; justify-content: center;
+}
+.check-btn.checked { background: #5B8DBE; border-color: #5B8DBE; color: white; }
+.check-btn.checked::after { content: '✓'; font-weight: bold; }
 
-    .habits-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 20px; }
-    .habit-card {
-        background: #F2F2F7; border-radius: 24px; width: 210px; height: 230px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        position: relative; transition: 0.2s ease; border: 1px solid #d0dce8;
-    }
-    .habit-avatar {
-        width: 80px; height: 80px; border-radius: 50%; background: #B8C5D9; 
-        display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
-        cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; padding: 0 10px; }
-    .habit-meta { color: #6B7B94; font-size: 12px; margin-top: 5px; }
-    .progress-bar { position: absolute; bottom: 12px; left: 20px; right: 20px; height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden; }
-    .progress-fill { height: 100%; background: #5B8DBE; transition: width 0.3s; }
-    .check-btn {
-        position: absolute; top: 15px; right: 15px; width: 28px; height: 28px;
-        border-radius: 50%; border: 2px solid #6B7B94; display: flex; align-items: center; justify-content: center;
-    }
-    .check-btn.checked { background: #5B8DBE; border-color: #5B8DBE; color: white; }
-    .check-btn.checked::after { content: '✓'; font-weight: bold; }
+/*иконки прости господи*/
+div[role="radiogroup"] {
+    display: grid;
+    grid-template-columns: repeat(5, 40px);
+    justify-content: center;
+
+    gap: 20px;
+    margin: 0 auto;
+    width: fit-content;
+}
+div[role="radiogroup"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+div[role="radiogroup"] label {
+    width: 80px;
+    height: 80px;
+    background: #EAF4FF;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+div[role="radiogroup"] input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+div[role="radiogroup"] label > div:first-child {
+    display: none;
+}
+div[role="radiogroup"] label > div:last-child {
+    font-size: 80px;
+    line-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+div[role="radiogroup"] label:hover {
+    background: #D6E9FF;
+}
+div[role="radiogroup"] input:checked + div {
+    background: #4DA6FF;
+    border-radius: 16px;
+}
+div[role="radiogroup"] input:checked + div span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 </style>
-
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
 
@@ -181,7 +202,8 @@ USER_ID = st.session_state.user.get('id', 1)
 # ---------------- 6. ФУНКЦИИ И ДИАЛОГИ ----------------
 ICONS = {
     "run": "🏃🏻‍♂️", "water": "💧", "sleep": "😴", "study": "📚", "gym": "🏋️‍♂️",
-    "food": "🍎", "walk": "🚶‍♂️", "meditate": "🧘‍♂️", "target": "🎯", "analyse": "📊"
+    "food": "🍎", "walk": "🚶‍♂️", "meditate": "🧘‍♂️", "target": "🎯", "analyse": "📊",
+    "time":"⏰", "health":"💊"
 }
 
 
@@ -208,14 +230,25 @@ def calculate_streaks(history):
     return streak, max_s
 
 
-@st.dialog("Добавление привычки")
+@st.dialog("Новая цель")
 def add_habit_dialog():
-    st.write("### Новая цель")
     name = st.text_input("Название:")
     duration = st.slider("Цель (дней):", 1, 100, 30)
     desc = st.text_area("Зачем это вам?")
-    selected_emoji = st.radio("Выберите иконку", list(ICONS.values()), horizontal=True)
+    if "selected_icon" not in st.session_state:
+        st.session_state.selected_icon = None
+
+    selected_emoji = st.radio(
+        "Выберите иконку",
+        list(ICONS.values()),
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
     icon_key = [k for k, v in ICONS.items() if v == selected_emoji][0]
+
+    if not name.strip() : st.warning("Введите название привычки")
+    elif not icon_key : st.warning("Выберите иконку")
 
     if st.button("Создать", use_container_width=True, type="primary"):
         if name.strip():
@@ -236,7 +269,7 @@ def habit_dialog(habit_id, name, history):
     col1.metric("Текущая серия", f"{streak} дн.")
     col2.metric("Рекорд", f"{max_streak} дн.")
 
-    if st.button("🗑️ Удалить привычку", type="secondary", use_container_width=True):
+    if st.button("🗑Удалить привычку", type="secondary", use_container_width=True):
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("DELETE FROM habits WHERE id = ?", (habit_id,))
@@ -251,7 +284,7 @@ st.markdown('<div class="page-header">ГЛАВНАЯ</div>', unsafe_allow_html=T
 
 col_l, col_c, col_r = st.columns([1, 2, 1])
 with col_c:
-    if st.button("➕ Добавить привычку", use_container_width=True, type="primary"):
+    if st.button("Добавить привычку", use_container_width=True, type="primary"):
         add_habit_dialog()
 
 # Загрузка данных
