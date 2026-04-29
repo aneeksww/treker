@@ -1,101 +1,17 @@
 import streamlit as st
-import base64
 
-from pages.app2 import get_base64_img
+st.set_page_config(page_title="Контакты", layout="wide", initial_sidebar_state="collapsed")
 
-st.set_page_config (
-    page_title = "Contacts",
-    layout = "wide"
-)
+from app import inject_custom_css_and_sidebar
+inject_custom_css_and_sidebar("contacts")
 
-st.title("Contacts")
+st.markdown('<div class="page-title">КОНТАКТЫ</div>', unsafe_allow_html=True)
 
-#панель управления
-img_menu = get_base64_img("images\menu.jpg")
-img_home = get_base64_img("images\home.jpg")
-img_fix = get_base64_img("images\settings.jpg")
-img_profile = get_base64_img("images\profile.jpg")
-img_ach = get_base64_img("images\stats.jpg")
-img_contacts = get_base64_img("images\contacts.jpg")
-
-img_trek = get_base64_img("images\label1.png")
-
-with st.sidebar:
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"][aria-expanded-true] > div:first-child {
-                width: 400px; /* Задайте желаемую ширину */
-            }
-            [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-                /* Дополнительные стили для сжатой панели */
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-    st.markdown(
-        f'''
-            <style>
-                .sidebar .sidebar-content {{
-                    width: 60px;
-                }}
-            </style>
-        ''',
-        unsafe_allow_html=True
-    )
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                            <img src="data:image/png;base64,{img_menu}" style="width:120px;border-radius:30px;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/app" target="_self"
-                        style="display: inline-block; overflow:hidden; border-radius:32px;">
-                        <img src="data:image/png;base64,{img_home}" "width:50px;display:block;margin:0 auto;">
-                </a>
-                </div>
-                """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/profile2" target="_self"
-                            style="display: inline-block; overflow:hidden; border-radius:32px;">
-                            <img src="data:image/png;base64,{img_profile}" "width:50px;display:block;margin:0 auto;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-                <div style="border-radius:15px;overflow:hidden;">
-                    <a href="/settings2" target="_self"
-                        style="display: inline-block; overflow:hidden; border-radius:32px;">
-                        <img src="data:image/png;base64,{img_fix}" "width:50px;display:block;margin:0 auto;">
-                    </a>
-                </div>
-                """,
-                unsafe_allow_html=True)
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-    st.sidebar.markdown(f"""
-                    <div style="border-radius:15px;overflow:hidden;">
-                        <a href="/contacts2" target="_self"
-                            style="display: inline-block; overflow:hidden; border-radius:32px;">
-                            <img src="data:image/png;base64,{img_contacts}" "width:50px;display:block;margin:0 auto;">
-                        </a>
-                    </div>
-                    """,
-                        unsafe_allow_html=True)
+col1, col2 = st.columns([1, 3])
+with col1:
+    # Заглушка под стоковую фотографию разработчика
+    st.markdown('<div style="width:150px;height:150px;background:#B8C5D9;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:50px;">👨‍💻</div>', unsafe_allow_html=True)
+with col2:
+    st.write("### Разработчик: Иванов Иван")
+    st.write("Свяжитесь со мной для предложений и сообщения об ошибках.")
+    st.markdown("[📧 Написать email (scpsosat837@gmail.com)](mailto:scpsosat837@gmail.com)")
