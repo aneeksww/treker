@@ -2,7 +2,8 @@ import streamlit as st
 
 st.set_page_config(page_title="Контакты", layout="wide", initial_sidebar_state="collapsed")
 
-
+from app import inject_custom_css_and_sidebar
+inject_custom_css_and_sidebar("contacts")
 
 st.markdown('<div class="page-title">КОНТАКТЫ</div>', unsafe_allow_html=True)
 
