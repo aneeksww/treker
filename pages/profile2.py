@@ -3,6 +3,15 @@ import sqlite3
 import bcrypt
 
 
+# ---------------- 1. КОНФИГУРАЦИЯ ----------------
+st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="expanded")
+
+
+# ---------------- 2. ИНИЦИАЛИЗАЦИЯ СЕССИИ И БД ----------------
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+
 # ---------------- 0. ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ ----------------
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
@@ -13,170 +22,236 @@ def hash_password(password):
 def check_password(password, hashed):
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-# ---------------- 1. НАСТРОЙКИ СТРАНИЦЫ И НАВИГАЦИЯ ----------------
-st.set_page_config(page_title="Profile", layout="wide")
 
-nav = st.query_params.get("nav")
-if nav == "app":
-    st.switch_page("app.py"); st.stop()
-elif nav == "profile":
-    st.switch_page("pages/profile2.py"); st.stop()
-elif nav == "settings":
-    st.switch_page("pages/settings2.py"); st.stop()
-elif nav == "contacts":
-    st.switch_page("pages/contacts2.py"); st.stop()
+# ---------------- 3. ГЛОБАЛЬНЫЕ СТИЛИ (CSS) ----------------
 
-# ---------------- 2. ГЛОБАЛЬНЫЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ----------------
 st.markdown("""
 <style>
+    /* 1. Общие настройки сайдбара */
+    [data-testid="stSidebarNav"] {display: none;}
+
+    section[data-testid="stSidebar"] {
+        width: 150px !important;
+        min-width: 150px !important;
+    }
+    
+
+    /* 2. Базовый стиль для всех плиток (и ссылок, и бургера) */
+    .nav-tile, [data-testid="stSidebar"] .stPageLink a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 80px !important;
+        height: 50px !important;
+        margin: 2px auto !important;
+        border-radius: 20px !important;
+        background-color: #8fa4bc !important; /* Цвет по умолчанию */
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+        text-decoration: none !important;
+        color: white !important;
+    }
+
+    /* 3. Масштабирование иконок (Material Symbols) */
+    /* Таргет для иконок внутри st.page_link */
+    [data-testid="stSidebar"] .stPageLink a span[data-testid="stWidgetIcon"] {
+        font-size: 65px !important; /* РАЗМЕР ИКОНКИ ТУТ */
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: white !important;
+    }
+
+    /* Размер иконок Material */
+    [data-testid="stSidebar"] .stPageLink a [data-testid="stWidgetIcon"] {
+        font-size: 75px !important; /* Увеличь это число для теста */
+        width: 45px !important;
+        height: 45px !important;
+        line-height: 45px !important;
+    }
+
+    /* 3. Скрываем текст и стандартные элементы Streamlit */
+    [data-testid="stSidebar"] .stPageLink a div p {
+        display: none !important;
+    }
+
+    .burger-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px; /* ← расстояние до меню */
+    }
+    
+    .nav-tile {
+        width: 80px !important;
+        height: 80px !important;
+        padding: 10px;
+        border-radius: 12px;
+        transition: 0.2s;
+    }
+    
+    .nav-tile:hover {
+        background-color: rgba(255,255,255,0.1);
+        cursor: pointer;
+    }
+    
+    .burger-icon {
+        font-size: 35px !important;
+        margin: 40px !important;
+    }
+
+    /* 4. Эффекты при наведении */
+    [data-testid="stSidebar"] .stPageLink a:hover {
+        background-color: #70869d !important; /* Чуть темнее при наведении */
+        transform: scale(1.05);
+    }
+
+    /* 5. ПОДСВЕТКА АКТИВНОЙ СТРАНИЦЫ (Самый высокий приоритет) */
+    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
+        background-color: #FF1493 !important; /* Твой синий для активной страницы */
+        box-shadow: 0 4px 15px rgba(91, 141, 190, 0.4) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
 :root { --primary-color: #7B2CBF !important; }
-header, footer, #MainMenu { visibility: hidden; display: none; }
-.main .block-container { padding: 10px 20px !important; background: transparent !important; }
-.main > div { padding: 0 !important; }
-hr { display: none !important; }
-.stApp { background: transparent !important; }
-.page-title { text-align: center; font-size: 28px; font-weight: 700; color: #334455; margin: 20px 0 30px; }
-.profile-card {
-    max-width: 420px; margin: 0 auto;
-    background: linear-gradient(135deg, #f5f9ff, #e8f1f8);
-    padding: 35px 30px; border-radius: 24px; text-align: center;
-    box-shadow: 0 10px 35px rgba(91, 141, 190, 0.15); border: 1px solid #d0dce8;
-}
-.profile-avatar {
-    width: 90px; height: 90px; margin: 0 auto 15px;
-    background: linear-gradient(135deg, #5B8DBE, #4a7aa3);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 36px; font-weight: 700;
-}
-.profile-name { font-size: 22px; font-weight: 700; color: #223344; }
-.profile-contact { color: #5a6b82; font-size: 14px; margin-bottom: 20px; }
-.auth-wrapper button {
-    min-height: 250px !important; background: linear-gradient(135deg, #5B8DBE, #4a7aa3) !important;
-    color: white !important; border-radius: 28px !important;
-    font-size: 20px !important; font-weight: 600 !important; transition: 0.3s;
-}
-.auth-wrapper button:hover { transform: translateY(-4px); }
-#sb-nav { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-top: 20px; }
-#sb-nav a {
-    display: flex; align-items: center; justify-content: center;
-    width: 80px; height: 80px; background: #C8D1DB; border-radius: 20px;
-    text-decoration: none !important; transition: 0.25s; cursor: pointer;
-}
-#sb-nav a:hover { transform: translateY(-4px) scale(1.07); background: #B8C5D3; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-#sb-nav a.active { background: linear-gradient(135deg, #5B8DBE, #4a7aa3); }
-#sb-nav a.active svg { stroke: white; }
-#sb-nav svg { width: 38px; height: 38px; stroke: #334455; stroke-width: 2.2; fill: none; }
-div[data-testid="stTabs"] button { color: #5a6b82 !important; border-bottom: 2px solid transparent !important; }
-div[data-testid="stTabs"] button[aria-selected="true"] { color: #7B2CBF !important; border-bottom: 2px solid #7B2CBF !important; }
-div[data-testid="stTabs"] button:hover { color: #9b59b6 !important; }
-div[data-testid="stTabs"] [data-baseweb="tab-highlight"] { display: none !important; }
-div[role="dialog"], div[data-testid="stDialog"] {
-    max-height: 90vh !important;
-    height: auto !important;
-    overflow-y: auto !important;
-    border-bottom: 3px solid #7B2CBF !important;
-}
-div[role="dialog"] > div, div[data-testid="stDialog"] > div {
-    max-height: 85vh !important;
-    padding: 15px 24px 24px 24px !important;
-}
-div[role="dialog"] .stTabs [data-baseweb="tab-panel"] { padding: 5px 0 !important; }
-div[role="dialog"] button[kind="icon"] { display: none !important; }
+    .main .block-container { padding: 10px 20px !important; background: transparent !important; }
+    .stApp { background: transparent !important; }
+
+    /* Заголовок */
+    .page-title { text-align: center; font-size: 28px; font-weight: 700; color: #334455; margin: 40px 0 30px; }
+
+    /* Карточка профиля */
+    .profile-card {
+        max-width: 420px; margin: 0 auto;
+        background: linear-gradient(135deg, #f5f9ff, #e8f1f8);
+        padding: 35px 30px; border-radius: 24px; text-align: center;
+        box-shadow: 0 10px 35px rgba(91, 141, 190, 0.15); border: 1px solid #d0dce8;
+    }
+    .profile-avatar {
+        width: 90px; height: 90px; margin: 0 auto 15px;
+        background: linear-gradient(135deg, #5B8DBE, #4a7aa3);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 36px; font-weight: 700;
+    }
+    .profile-name { font-size: 22px; font-weight: 700; color: #223344; }
+    .profile-contact { color: #5a6b82; font-size: 14px; margin-bottom: 20px; }
+
+    /* Кнопки авторизации */
+    .auth-wrapper button {
+        min-height: 250px !important;
+        background: linear-gradient(135deg, #5B8DBE, #4a7aa3) !important;
+        color: white !important; border-radius: 28px !important;
+        font-size: 20px !important; font-weight: 600 !important; transition: 0.3s;
+    }
+    .auth-wrapper button:hover { transform: translateY(-4px); }
+
+    /* Вкладки диалога */
+    div[data-testid="stTabs"] button { color: #5a6b82 !important; }
+    div[data-testid="stTabs"] button[aria-selected="true"] { color: #7B2CBF !important; border-bottom: 2px solid #7B2CBF !important; }
+
 </style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
 
-# ---------------- 3. СЕССИЯ ----------------
-if "user" not in st.session_state: st.session_state.user = None
 
-
-# ---------------- 4. ДИАЛОГ АВТОРИЗАЦИИ ----------------
+# ---------------- 4. МОДАЛЬНОЕ ОКНО ----------------
 @st.dialog("Вход в аккаунт")
 def auth_modal():
     tab1, tab2 = st.tabs(["Вход", "Регистрация"])
 
     with tab1:
-        contact_input = st.text_input("Логин", key="login_contact")
-        password_input = st.text_input("Пароль", type="password", key="login_pass")
-
-        if st.button("Войти", key="login_btn", use_container_width=True):
-            if contact_input.strip() and password_input.strip():
+        login_val = st.text_input("Логин", key="login_field")
+        pass_val = st.text_input("Пароль", type="password", key="pass_field")
+        if st.button("Войти", use_container_width=True):
+            if login_val.strip() and pass_val.strip():
                 conn = get_db_connection()
                 c = conn.cursor()
-                c.execute("SELECT password FROM user WHERE login = ?", (contact_input.strip(),))
-                result = c.fetchone()
+                c.execute("SELECT id, password FROM user WHERE login = ?", (login_val.strip(),))
+                res = c.fetchone()
                 conn.close()
-
-                if result and check_password(password_input, result[0]):
-                    st.session_state.user = {"nick": contact_input.strip(), "contact": "user@example.com"}
+                if res and check_password(pass_val, res[1]):
+                    st.session_state.user = {
+                        "id": res[0],
+                        "nick": login_val.strip(),
+                        "contact": "user@example.com"
+                    }
                     st.rerun()
                 else:
-                    st.error("Неверный логин или пароль")
+                    st.error("Неверные данные")
             else:
                 st.error("Заполни поля")
 
     with tab2:
-        nick = st.text_input("Логин", key="reg_nick")
-        contact_beauty = st.text_input("Почта", key="reg_contact")
+        nick = st.text_input("Придумайте логин", key="reg_nick")
+        mail = st.text_input("Почта (отображение)", key="reg_mail")
         p1 = st.text_input("Пароль", type="password", key="reg_p1")
-        p2 = st.text_input("Повтори пароль", type="password", key="reg_p2")
-
-        if st.button("Зарегистрироваться", key="reg_btn", use_container_width=True):
-            if not all([nick.strip(), contact_beauty.strip(), p1.strip(), p2.strip()]):
-                st.error("Заполни все поля")
+        p2 = st.text_input("Повтор пароля", type="password", key="reg_p2")
+        if st.button("Создать аккаунт", use_container_width=True):
+            if not all([nick.strip(), mail.strip(), p1.strip(), p2.strip()]):
+                st.error("Заполни всё")
             elif p1 != p2:
-                st.error("Пароли не совпадают")
+                st.error("Пароли не совпали")
             else:
                 conn = get_db_connection()
                 c = conn.cursor()
                 try:
-                    hashed = hash_password(p1)
-                    c.execute("INSERT INTO user (login, password) VALUES (?, ?)",
-                              (nick.strip(), hashed))
+                    c.execute("INSERT INTO user (login, password) VALUES (?, ?)", (nick.strip(), hash_password(p1)))
                     conn.commit()
-                    st.session_state.user = {"nick": nick.strip(), "contact": contact_beauty.strip()}
+                    new_id = c.lastrowid
+                    st.session_state.user = {
+                        "id": new_id,
+                        "nick": nick.strip(),
+                        "contact": mail.strip()
+                    }
                     st.rerun()
                 except sqlite3.IntegrityError:
-                    st.error("Этот логин уже занят")
+                    st.error("Логин занят")
                 finally:
                     conn.close()
 
 
-# ---------------- 5. САЙДБАР (БЕЗ ИЗМЕНЕНИЙ) ----------------
-active_page = st.query_params.get("nav", "profile")
+# ---------------- 5. НАДЕЖНЫЙ САЙДБАР ----------------
 with st.sidebar:
-    st.markdown(f"""
-    <div id="sb-nav">
-        <div style="width:90px;height:90px;background:#8FA4BC;border-radius:20px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    # Статичный бургер (используем HTML + Material Icons класс)
+    st.markdown("""
+        <div class="burger-container">
+            <div class="nav-tile">
+                <i class="material-icons burger-icon">menu</i>
+            </div>
         </div>
-        <a href="?nav=app" target="_self" class="{'active' if active_page == 'app' else ''}"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></a>
-        <a href="?nav=profile" target="_self" class="{'active' if active_page == 'profile' else ''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c2-4 14-4 16 0"/></svg></a>
-        <a href="?nav=settings" target="_self" class="{'active' if active_page == 'settings' else ''}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></a>
-        <a href="?nav=contacts" target="_self" class="{'active' if active_page == 'contacts' else ''}"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3z"/></svg></a>
-    </div>
     """, unsafe_allow_html=True)
 
+    # Навигация через Material Icons (названия берем с fonts.google.com/icons)
+    st.page_link("app.py", label="Home", icon=":material/home:")
+    st.markdown("<p style='text-align:center; font-size:17px; opacity:0.3;'>ГЛАВНАЯ</p>", unsafe_allow_html=True)
+    st.page_link("pages/profile2.py", label="Profile", icon=":material/person:")
+    st.markdown("<p style='text-align:center; font-size:17px; opacity:0.3;'>ПРОФИЛЬ</p>", unsafe_allow_html=True)
+    st.page_link("pages/settings2.py", label="Settings", icon=":material/settings:")
+    st.markdown("<p style='text-align:center; font-size:17px; opacity:0.3;'>НАСТРОЙКИ</p>", unsafe_allow_html=True)
+    st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
+    st.markdown("<p style='text-align:center; font-size:17px; opacity:0.3;'>КОНТАКТЫ</p>", unsafe_allow_html=True)
+
 # ---------------- 6. ОСНОВНОЙ КОНТЕНТ ----------------
-st.markdown('<div class="page-title">Профиль</div>', unsafe_allow_html=True)
 
 if st.session_state.user:
-    st.markdown('<div class="profile-card">', unsafe_allow_html=True)
     st.markdown(f"""
+    <div class="profile-card">
         <div class="profile-avatar">{st.session_state.user['nick'][0].upper()}</div>
         <div class="profile-name">{st.session_state.user['nick']}</div>
         <div class="profile-contact">{st.session_state.user['contact']}</div>
+    </div>
     """, unsafe_allow_html=True)
+
+    st.write("")  # Отступ
     if st.button("Выйти из аккаунта", use_container_width=True):
         st.session_state.user = None
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 else:
-    col1, col2, col3 = st.columns([2, 1, 2])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         st.markdown('<div class="auth-wrapper">', unsafe_allow_html=True)
         if st.button("Вход / Регистрация", use_container_width=True):
             auth_modal()
         st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown(
-        "<div style='text-align:center; color:#5a6b82; margin-top:20px;'>Нажмите кнопку выше, чтобы войти или создать аккаунт</div>",
-        unsafe_allow_html=True)
+        st.info("Пожалуйста, авторизуйтесь для управления привычками.")
