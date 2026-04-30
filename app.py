@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import os
 from datetime import date, datetime, timedelta
+from streamlit_calendar import calendar
 
 # ---------------- 1. КОНФИГУРАЦИЯ ----------------
 st.set_page_config(page_title="Habit Tracker", layout="wide", initial_sidebar_state="expanded")
@@ -18,6 +19,7 @@ def local_css(style_path):
 
 
 local_css("styles/style.css")
+
 
 # ---------------- 2. БАЗА ДАННЫХ ----------------
 def get_db_connection():
@@ -157,7 +159,7 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
     border: 1.5px solid #E0E6ED; 
     position: relative;
     margin: 0 auto 15px auto; 
-    
+
     /* Более выраженная тень для объема */
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); 
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -396,8 +398,6 @@ def add_habit_dialog():
     name = st.text_input("Название:")
     duration = st.slider("Цель (дней):", 1, 100, 30)
 
-
-
     selected_icon_name = st.radio(
         "Выберите иконку",
         list(ICONS.values()),
@@ -417,15 +417,49 @@ def add_habit_dialog():
             conn.close()
             st.rerun()
 
-@st.dialog("Статистика")
+
+@st.dialog("Статистика и история")
 def habit_dialog(habit_id, name, history):
     st.write(f"### {name}")
+
+    # Расчет серий
     streak, max_streak = calculate_streaks(history)
     col1, col2 = st.columns(2)
     col1.metric("Текущая серия", f"{streak} дн.")
     col2.metric("Рекорд", f"{max_streak} дн.")
 
-    if st.button("🗑Удалить привычку", type="secondary", use_container_width=True):
+    st.write("---")
+    st.write("**Календарь достижений:**")
+
+    # Формируем события для календаря (отмеченные дни)
+    # history — это список строк ['2026-04-01', '2026-04-02', ...]
+    calendar_events = [
+        {
+            "title": "✅",
+            "start": d,
+            "end": d,
+            "display": "background",
+            "color": "#28C76F",
+        }
+        for d in history
+    ]
+
+    calendar_options = {
+        "editable": False,
+        "selectable": False,
+        "headerToolbar": {
+            "left": "today",
+            "center": "title",
+            "right": "prev,next",
+        },
+        "initialView": "dayGridMonth",
+    }
+
+    # Отображаем календарь
+    calendar(events=calendar_events, options=calendar_options, key=f"cal_{habit_id}")
+
+    st.write("---")
+    if st.button("🗑 Удалить привычку", type="secondary", use_container_width=True):
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("DELETE FROM habits WHERE id = ?", (habit_id,))
