@@ -5,9 +5,6 @@ import bcrypt
 # ---------------- 1. КОНФИГУРАЦИЯ ----------------
 st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="expanded")
 
-if "user" not in st.session_state:
-    st.session_state.user = None
-
 
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
@@ -33,7 +30,7 @@ st.markdown("""
     /* --- НАВИГАЦИЯ (САЙДБАР) --- */
     [data-testid="stSidebarNav"] {display: none;}
     section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
-    
+
     /* Контейнер плитки */
     [data-testid="stSidebar"] .stPageLink a {
         display: flex !important; align-items: center !important; justify-content: center !important;
@@ -41,7 +38,7 @@ st.markdown("""
         border-radius: 20px !important; background-color: #8fa4bc !important;
         transition: 0.3s !important; text-decoration: none !important;
     }
-    
+
     /* Скрываем текст подписи */
     [data-testid="stSidebar"] .stPageLink a p { display: none !important; }
     [data-testid="stSidebar"] .stPageLink a[aria-current="page"] { background-color: #FF1493 !important; }
@@ -55,7 +52,7 @@ st.markdown("""
         width: 35px !important;
         height: 35px !important;
         line-height: 35px !important;
-       
+
         margin: 0 !important;
         padding: 0 !important;
     }
@@ -85,19 +82,19 @@ st.markdown("""
     /* --- ПРАВАЯ ПАНЕЛЬ (ДОСТИЖЕНИЯ) --- */
     .ach-section-title { font-size: 24px; font-weight: 700; color: #334455; margin-bottom: 25px; }
     .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-    
+
     .ach-card {
         background: white; border-radius: 24px; padding: 25px 15px;
         text-align: center; transition: 0.3s; min-height: 220px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    
+
     .ach-icon-box { margin-bottom: 15px; }
     .ach-icon-box .material-icons { font-size: 55px; }
 
     /* Текст достижений */
     .ach-name { font-size: 16px; font-weight: 800; color: #1A1C1F; margin-bottom: 8px; }
-    
+
     /* ИСПРАВЛЕННЫЙ ЦВЕТ ОПИСАНИЯ (Темный и контрастный) */
     .ach-desc { 
         font-size: 12px; 
@@ -108,7 +105,7 @@ st.markdown("""
 
     .locked { filter: grayscale(100%); opacity: 0.4; border: 2px dashed #ced4da; }
     .unlocked { border: 2px solid #AFEEEE; box-shadow: 0 8px 20px rgba(70, 130, 180, 0.1); }
-    
+
     .progress-tag {
         margin-top: 15px; font-size: 11px; font-weight: 700;
         background: #f0f2f6; padding: 4px 10px; border-radius: 12px; color: #334455;
@@ -149,6 +146,9 @@ with st.sidebar:
     st.page_link("pages/contacts2.py", label="Chat", icon=":material/chat:")
 
 # ---------------- 5. ОСНОВНОЙ КОНТЕНТ ----------------
+
+if "user" not in st.session_state:
+    st.session_state.user= None
 
 if st.session_state.user:
     u = st.session_state.user
@@ -223,5 +223,3 @@ else:
     if st.button("🔑 Войти в профиль", use_container_width=False, type="primary", key="main_auth"):
         auth_modal()
     st.markdown('</div>', unsafe_allow_html=True)
-
-
