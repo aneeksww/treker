@@ -9,6 +9,8 @@ st.set_page_config(page_title="Profile", layout="wide", initial_sidebar_state="e
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
 
+def hash_password(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def check_password(password, hashed):
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
@@ -112,7 +114,7 @@ st.markdown("""
     }
 
     /* Кнопка входа */
-    .auth-btn-container { text-align: center; margin-top: 100px; }
+    .auth-btn-container { color: #334455; text-align: center; margin-top: 100px; }
 </style>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
@@ -122,18 +124,52 @@ st.markdown("""
 @st.dialog("Вход в систему")
 def auth_modal():
     t1, t2 = st.tabs(["Вход", "Регистрация"])
+
     with t1:
-        l = st.text_input("Логин", key="l_f")
-        p = st.text_input("Пароль", type="password", key="p_f")
-        if st.button("Войти", use_container_width=True, key="btn_login"):
-            conn = get_db_connection()
-            res = conn.cursor().execute("SELECT id, password FROM user WHERE login=?", (l.strip(),)).fetchone()
-            conn.close()
-            if res and check_password(p, res[1]):
-                st.session_state.user = {"id": res[0], "nick": l.strip(), "contact": "user@example.com"}
-                st.rerun()
-            else:
-                st.error("Ошибка входа")
+        # Оборачиваем в форму для работы Enter
+        with st.form("login_form", clear_on_submit=False, border=False):
+            l = st.text_input("Логин", key="login_val")
+            p = st.text_input("Пароль", type="password", key="pass_val")
+            submit_login = st.form_submit_button("Войти", use_container_width=True, type="primary")
+
+            if submit_login:
+                conn = get_db_connection()
+                res = conn.cursor().execute("SELECT id, password FROM user WHERE login=?", (l.strip(),)).fetchone()
+                conn.close()
+                if res and check_password(p, res[1]):
+                    st.session_state.user = {"id": res[0], "nick": l.strip(), "contact": "user@example.com"}
+                    st.rerun()
+                else:
+                    st.error("Ошибка входа")
+
+    with t2:
+        # Оборачиваем в форму для работы Enter
+        with st.form("reg_form", border=False):
+            nick = st.text_input("Логин", key="reg_nick")
+            contact_beauty = st.text_input("Почта", key="reg_contact")
+            p1 = st.text_input("Пароль", type="password", key="reg_p1")
+            p2 = st.text_input("Повтори пароль", type="password", key="reg_p2")
+            submit_reg = st.form_submit_button("Зарегистрироваться", use_container_width=True, type="primary")
+
+            if submit_reg:
+                if not all([nick.strip(), contact_beauty.strip(), p1.strip(), p2.strip()]):
+                    st.error("Заполни все поля")
+                elif p1 != p2:
+                    st.error("Пароли не совпадают")
+                else:
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    try:
+                        hashed = hash_password(p1)
+                        c.execute("INSERT INTO user (login, password) VALUES (?, ?)", (nick.strip(), hashed))
+                        new_id = c.lastrowid
+                        conn.commit()
+                        st.session_state.user = {"id": new_id, "nick": nick.strip(), "contact": contact_beauty.strip()}
+                        st.rerun()
+                    except sqlite3.IntegrityError:
+                        st.error("Этот логин уже занят")
+                    finally:
+                        conn.close()
 
 
 # ---------------- 4. САЙДБАР ----------------
