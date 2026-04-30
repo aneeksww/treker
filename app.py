@@ -394,7 +394,7 @@ if habits:
             st.markdown(f"""
                 <div class="habit-card">
                     <div class="habit-avatar">
-                        <i class="material-icons" style="font-size:42px; color: #6b6d94;">{icon_name}</i>
+                        <i class="material-icons" style="font-size:42px; color: #4d74b3;">{icon_name}</i>
                     </div>
                     <div class="habit-name">{h_name}</div>
                     <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
