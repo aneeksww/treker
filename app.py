@@ -125,73 +125,115 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
 .page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
 
 
-/* ---------------- КАРТОЧКИ ПРИВЫЧЕК ---------------- */
-.habits-grid { display: block; padding: 20px; }
+.habits-grid { 
+    display: block; 
+    padding: 20px; 
+}
 
 .habit-card {
-    background: #F2F2F7;
-    border-radius: 24px;
+    background: #ffffff;
+    border-radius: 28px;
     width: 210px;
-    height: 230px;
+    height: 240px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid #d0dce8;
+    /* Усилили рамку */
+    border: 1.5px solid #E0E6ED; 
     position: relative;
+    margin: 0 auto 15px auto; 
+    
+    /* Более выраженная тень для объема */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); 
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow: hidden;
+}
 
-    /* ИСПРАВЛЕНИЕ: Центрируем карточку внутри колонки Streamlit */
-    margin: 0 auto 10px auto; 
+.habit-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(91, 141, 190, 0.2);
+    border-color: #5B8DBE;
 }
 
 .habit-avatar {
-    width: 70px; height: 70px; /* Чуть меньше для 4-х в ряд */
+    width: 80px; 
+    height: 80px;
     border-radius: 50%;
-    background: #ADD8E6;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 10px;
+    /* ГЛУБОКИЙ КОНТРАСТНЫЙ ГРАДИЕНТ: от синего к насыщенному голубому */
+    background: linear-gradient(135deg, #4A90E2 0%, #5B8DBE 100%);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    margin-bottom: 15px;
+    /* Тень под иконкой, чтобы она "вдавливалась" или "выступала" */
+    box-shadow: 0 8px 20px rgba(74, 144, 226, 0.35);
 }
 
-.habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; }
-.habit-meta { color: #6b6d94; font-size: 12px; margin-top: 5px; }
+/* Сама иконка теперь максимально видна */
+.habit-avatar i, .habit-avatar span {
+    font-size: 36px !important;
+    color: #ffffff !important; /* Яркий белый на темном фоне */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
 
+.habit-name { 
+    color: #111111; /* Чистый черный или очень темный для четкости */
+    font-size: 17px; 
+    font-weight: 800; /* Максимально жирный */
+    text-align: center; 
+    padding: 0 15px;
+    line-height: 1.1;
+}
+
+.habit-meta { 
+    color: #556677; /* Затемнили текст подписи */
+    font-size: 13px; 
+    margin-top: 8px; 
+    font-weight: 600;
+}
+
+/* Прогресс-бар: сделали ярче и заметнее */
 .progress-bar {
-    position: absolute; bottom: 12px; left: 20px; right: 20px;
-    height: 6px; background: #E0E5EC; border-radius: 10px; overflow: hidden;
+    position: absolute; 
+    bottom: 18px; 
+    left: 25px; 
+    right: 25px;
+    height: 10px; /* Сделали чуть толще */
+    background: #EDF1F7; 
+    border-radius: 20px; 
 }
-.progress-fill { height: 100%; background: #5B8DBE; }
 
-/* ---------------- КНОПКИ ПОД КАРТОЧКОЙ ---------------- */
+.progress-fill { 
+    height: 100%; 
+    /* Насыщенный синий для заполнения */
+    background: linear-gradient(90deg, #4A90E2, #007AFF); 
+    border-radius: 20px;
+}
+
+/* ---------------- КНОПКИ (АКЦЕНТЫ) ---------------- */
 div.stButton > button[id^="st-key-btn_info_"],
 div.stButton > button[id^="st-key-btn_check_"],
-div.stButton > button[id^="st-key-btn_done_"],
+div.stButton > button[id^="st-key-btn_done_"] {
+    background-color: #F0F4F8 !important;
+    color: #111111 !important; /* Текст кнопок стал черным */
+    border: 1px solid #D0DCE8 !important;
+    font-weight: 700 !important;
+}
+
+div.stButton > button[id^="st-key-btn_"]:hover {
+    background-color: #5B8DBE !important;
+    color: #ffffff !important;
+    border-color: #5B8DBE !important;
+}
+
+/* Галочка (выполнено) — теперь сочный зеленый */
 div.stButton > button[id^="st-key-btn_done_"]:disabled {
-    height: 36px !important;
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    border-radius: 10px !important;
-    margin: 0 auto !important; /* Центрирует кнопку в своей микро-колонке */
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    opacity: 1 !important;
+    background: #28C76F !important; /* Яркий зеленый */
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(40, 199, 111, 0.3) !important;
 }
-
-div.stButton > button[id^="st-key-btn_"] [data-testid="stWidgetIcon"],
-div.stButton > button[id^="st-key-btn_"] span {
-    font-size: 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 20px !important;
-    height: 20px !important;
-}
-
-div.stButton > button[id^="st-key-btn_info_"] { background-color: #ADD8E6 !important; color: #ADD8E6 !important; }
-div.stButton > button[id^="st-key-btn_check_"] { background-color: #ADD8E6 !important; color: #ADD8E6 !important; }
-div.stButton > button[id^="st-key-btn_done_"]:disabled { background-color: #ADD8E6 !important; color: #ADD8E6 !important; border: none !important; }
 
 /* ---------------- ВЫБОР ИКОНКИ ПРИ СОЗДАНИИ (MATERIAL ICONS) ---------------- */
 div[role="radiogroup"] {
