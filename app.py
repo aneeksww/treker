@@ -121,12 +121,10 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
     transform: scale(1.02);
 }
 
-.stSlider > div > div > div > div { background: #6B7B94 !important; }
-.stSlider [data-baseweb="slider"] div[role="slider"] {
-    background: #6B7B94 !important; border: 2px solid #6B7B94 !important;
-}
+
 
 .page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
+
 
 /* ---------------- КАРТОЧКИ ПРИВЫЧЕК ---------------- */
 .habits-grid { display: block; padding: 20px; }
@@ -251,6 +249,40 @@ div[role="radiogroup"] input:checked + div {
 div[role="radiogroup"] input:checked + div p {
     color: white !important; /* Иконка становится белой на синем фоне */
 }
+
+div[data-testid="stSlider"] {
+    --primary-color: #5B8DBE !important;
+}
+
+/* 2. Прямое попадание по числу над ползунком (thumb value) */
+div[data-testid="stSlider"] [data-testid="stThumbValue"],
+div[data-testid="stSlider"] [data-testid="stThumbValue"] > span {
+    color: #5B8DBE !important;
+    -webkit-text-fill-color: #5B8DBE !important;
+    font-weight: 800 !important;
+}
+
+/* 3. Если число находится внутри контейнера с меткой (label) */
+div[data-testid="stSlider"] label {
+    color: #334455 !important;
+}
+
+/* 4. Принудительно красим сам ползунок и активную дорожку в синий */
+div[data-testid="stSlider"] [role="slider"] {
+    background-color: #5B8DBE !important;
+    border-color: #5B8DBE !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stSlider"] [data-baseweb="slider"] > div > div > div {
+    background-color: #5B8DBE !important;
+}
+
+/* 5. Убираем красную подсветку, если Streamlit думает, что это ошибка */
+div[data-testid="stSlider"] div[aria-invalid="true"] {
+    border-color: transparent !important;
+}
+
 </style>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 """, unsafe_allow_html=True)
@@ -314,9 +346,7 @@ def calculate_streaks(history):
 def add_habit_dialog():
     name = st.text_input("Название:")
     duration = st.slider("Цель (дней):", 1, 100, 30)
-    desc = st.text_area("Зачем это вам?")
 
-    # st.radio теперь выводит текст (названия иконок), а CSS превращает их в картинки
     selected_icon_name = st.radio(
         "Выберите иконку",
         list(ICONS.values()),
@@ -324,7 +354,6 @@ def add_habit_dialog():
         label_visibility="collapsed"
     )
 
-    # Находим ключ (например, "run") по выбранному значению ("directions_run")
     icon_key = [k for k, v in ICONS.items() if v == selected_icon_name][0]
 
     if not name.strip(): st.warning("Введите название привычки")
@@ -334,11 +363,10 @@ def add_habit_dialog():
             conn = get_db_connection()
             c = conn.cursor()
             c.execute("INSERT INTO habits (user_id, name, duration, description, icon_key) VALUES (?, ?, ?, ?, ?)",
-                      (USER_ID, name.strip(), duration, desc.strip(), icon_key))
+                      (USER_ID, name.strip(), duration, "", icon_key))
             conn.commit()
             conn.close()
             st.rerun()
-
 
 @st.dialog("Статистика")
 def habit_dialog(habit_id, name, history):
