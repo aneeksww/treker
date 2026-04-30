@@ -459,7 +459,7 @@ def habit_dialog(habit_id, name, history):
     calendar(events=calendar_events, options=calendar_options, key=f"cal_{habit_id}")
 
     st.write("---")
-    if st.button("🗑 Удалить привычку", type="secondary", use_container_width=True):
+    if st.button("Удалить привычку", type="secondary", use_container_width=True):
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("DELETE FROM habits WHERE id = ?", (habit_id,))
@@ -467,6 +467,8 @@ def habit_dialog(habit_id, name, history):
         conn.commit()
         conn.close()
         st.rerun()
+
+    
 
 
 # ---------------- 7. ГЛАВНЫЙ ЭКРАН ----------------
