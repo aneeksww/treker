@@ -19,7 +19,6 @@ def local_css(style_path):
 
 local_css("styles/style.css")
 
-
 # ---------------- 2. БАЗА ДАННЫХ ----------------
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
@@ -148,7 +147,7 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
 .habit-avatar {
     width: 70px; height: 70px; /* Чуть меньше для 4-х в ряд */
     border-radius: 50%;
-    background: #B8C5D9;
+    background: #ADD8E6;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 10px;
 }
@@ -190,9 +189,9 @@ div.stButton > button[id^="st-key-btn_"] span {
     height: 20px !important;
 }
 
-div.stButton > button[id^="st-key-btn_info_"] { background-color: #6b6d94 !important; color: #334455 !important; }
-div.stButton > button[id^="st-key-btn_check_"] { background-color: #6b6d94 !important; color: white !important; }
-div.stButton > button[id^="st-key-btn_done_"]:disabled { background-color: #4954A6 !important; color: white !important; border: none !important; }
+div.stButton > button[id^="st-key-btn_info_"] { background-color: #ADD8E6 !important; color: #ADD8E6 !important; }
+div.stButton > button[id^="st-key-btn_check_"] { background-color: #ADD8E6 !important; color: #ADD8E6 !important; }
+div.stButton > button[id^="st-key-btn_done_"]:disabled { background-color: #ADD8E6 !important; color: #ADD8E6 !important; border: none !important; }
 
 /* ---------------- ВЫБОР ИКОНКИ ПРИ СОЗДАНИИ (MATERIAL ICONS) ---------------- */
 div[role="radiogroup"] {
@@ -250,23 +249,6 @@ div[role="radiogroup"] input:checked + div p {
     color: white !important; /* Иконка становится белой на синем фоне */
 }
 
-div[data-testid="stSlider"] {
-    --primary-color: #5B8DBE !important;
-}
-
-/* 2. Прямое попадание по числу над ползунком (thumb value) */
-div[data-testid="stSlider"] [data-testid="stThumbValue"],
-div[data-testid="stSlider"] [data-testid="stThumbValue"] > span {
-    color: #5B8DBE !important;
-    -webkit-text-fill-color: #5B8DBE !important;
-    font-weight: 800 !important;
-}
-
-/* 3. Если число находится внутри контейнера с меткой (label) */
-div[data-testid="stSlider"] label {
-    color: #334455 !important;
-}
-
 /* 4. Принудительно красим сам ползунок и активную дорожку в синий */
 div[data-testid="stSlider"] [role="slider"] {
     background-color: #5B8DBE !important;
@@ -278,9 +260,20 @@ div[data-testid="stSlider"] [data-baseweb="slider"] > div > div > div {
     background-color: #5B8DBE !important;
 }
 
-/* 5. Убираем красную подсветку, если Streamlit думает, что это ошибка */
-div[data-testid="stSlider"] div[aria-invalid="true"] {
-    border-color: transparent !important;
+/* Нацеливаемся на все внутренние элементы текста и ползунка */
+div[data-testid="stSlider"] * {
+    color: #5B8DBE !important;
+    --primary-color: #5B8DBE !important;
+}
+
+div[data-testid="stSlider"] [data-baseweb="slider"] > div {
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+/* Принудительно красим активную часть дорожки (до ползунка) в синий */
+div[data-testid="stSlider"] [data-baseweb="slider"] div[style*="left: 0%"] {
+    background-color: #5B8DBE !important;
 }
 
 </style>
@@ -347,6 +340,8 @@ def add_habit_dialog():
     name = st.text_input("Название:")
     duration = st.slider("Цель (дней):", 1, 100, 30)
 
+
+
     selected_icon_name = st.radio(
         "Выберите иконку",
         list(ICONS.values()),
@@ -355,8 +350,6 @@ def add_habit_dialog():
     )
 
     icon_key = [k for k, v in ICONS.items() if v == selected_icon_name][0]
-
-    if not name.strip(): st.warning("Введите название привычки")
 
     if st.button("Создать", use_container_width=True, type="primary"):
         if name.strip():
@@ -422,7 +415,7 @@ if habits:
             st.markdown(f"""
                 <div class="habit-card">
                     <div class="habit-avatar">
-                        <i class="material-icons" style="font-size:42px; color: #4d74b3;">{icon_name}</i>
+                        <i class="material-icons" style="font-size:42px; color: white;">{icon_name}</i>
                     </div>
                     <div class="habit-name">{h_name}</div>
                     <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
