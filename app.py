@@ -73,6 +73,7 @@ section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !im
     height: 85px !important;
     margin: 15px auto !important;
     border-radius: 20px !important;
+    color: white !important; /* Цвет текста/иконки */
     background-color: #8fa4bc !important;
     transition: all 0.3s ease !important;
     text-decoration: none !important;
@@ -136,10 +137,7 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
     transform: scale(1.02);
 }
 
-
-
 .page-header { text-align: center; margin: 30px 0; font-size: 32px; font-weight: 700; color: #334455; }
-
 
 .habits-grid { 
     display: block; 
