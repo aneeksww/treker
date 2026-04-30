@@ -59,52 +59,68 @@ st.markdown("""
         padding-bottom: 0rem !important;
     }
 
-[data-testid="stHeader"] { background: rgba(0,0,0,0); } /* Прозрачный хедер */
-
 /* --- НАВИГАЦИЯ (САЙДБАР) --- */
-    [data-testid="stSidebarNav"] {display: none;}
-    section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
-    .nav-tile, [data-testid="stSidebar"] .stPageLink a {
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        width: 85px !important; height: 85px !important; margin: 15px auto !important;
-        border-radius: 20px !important; background-color: #8fa4bc !important;
-        transition: all 0.3s ease !important; text-decoration: none !important;
+[data-testid="stHeader"] { background: rgba(0,0,0,0); } /* Прозрачный хедер */
+[data-testid="stSidebarNav"] {display: none;}
+section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
 
-    }
-    /* --- НАВИГАЦИЯ (САЙДБАР) --- */
-    [data-testid="stSidebarNav"] {display: none;}
-    section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
+/* Общий стиль для плиток и ссылок */
+.nav-tile, [data-testid="stSidebar"] .stPageLink a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 85px !important;
+    height: 85px !important;
+    margin: 15px auto !important;
+    border-radius: 20px !important;
+    background-color: #8fa4bc !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    /* Убираем стандартный зазор между иконкой и скрытым текстом */
+    gap: 0 !important; 
+}
 
-    /* Контейнер плитки */
-    [data-testid="stSidebar"] .stPageLink a {
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        width: 85px !important; height: 85px !important; margin: 15px auto !important;
-        border-radius: 20px !important; background-color: #8fa4bc !important;
-        transition: 0.3s !important; text-decoration: none !important;
-    }
+/* ИСПРАВЛЕНИЕ ЦЕНТРИРОВАНИЯ: Сбрасываем внутренние контейнеры Streamlit */
+[data-testid="stSidebar"] .stPageLink a div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
 
-    /* Скрываем текст подписи */
-    [data-testid="stSidebar"] .stPageLink a p { display: none !important; }
-    [data-testid="stSidebar"] .stPageLink a[aria-current="page"] { background-color: #FF1493 !important; }
+/* Полностью убираем влияние текста */
+[data-testid="stSidebar"] .stPageLink a p {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+}
 
-    /* ПРОБИВАЕМ ИКОНКИ: Нацеливаемся напрямую на SVG и шрифтовые иконки внутри ссылки */
-    [data-testid="stSidebar"] .stPageLink a svg,
-    [data-testid="stSidebar"] .stPageLink a i,
-    [data-testid="stSidebar"] .stPageLink a span.material-symbols-rounded,
-    [data-testid="stSidebar"] .stPageLink a span[translate="no"] {
-        font-size: 35px !important; 
-        width: 35px !important;
-        height: 35px !important;
-        line-height: 35px !important;
+/* Ссылка в активном состоянии */
+[data-testid="stSidebar"] .stPageLink a[aria-current="page"] { 
+    background-color: #FF1493 !important; 
+}
 
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    [data-testid="stSidebar"] .stPageLink a:hover {
-        background-color: #70869d !important;
-        transform: scale(1.05);
-    }
+/* СТИЛИЗАЦИЯ ИКОНОК: Убираем лишние отступы */
+[data-testid="stSidebar"] .stPageLink a svg,
+[data-testid="stSidebar"] .stPageLink a i,
+[data-testid="stSidebar"] .stPageLink a span[translate="no"] {
+    font-size: 35px !important; 
+    width: 35px !important;
+    height: 35px !important;
+    line-height: 35px !important;
+    margin: 0 !important; /* Обнуляем margin, который Streamlit добавляет справа */
+    padding: 0 !important;
+    display: block !important;
+    fill: white !important; /* Для SVG */
+    color: white !important; /* Для шрифтовых иконок */
+}
 
+/* Ховер эффект */
+[data-testid="stSidebar"] .stPageLink a:hover {
+    background-color: #70869d !important;
+    transform: scale(1.05);
+}
 header, footer, #MainMenu { visibility: hidden; display: none; }
 
 .stButton > button {
