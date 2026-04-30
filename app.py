@@ -55,6 +55,13 @@ init_db()
 # ---------------- 3. СТИЛИ ----------------
 st.markdown("""
 <style>
+.block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+    }
+
+[data-testid="stHeader"] { background: rgba(0,0,0,0); } /* Прозрачный хедер */
+
 /* --- НАВИГАЦИЯ (САЙДБАР) --- */
     [data-testid="stSidebarNav"] {display: none;}
     section[data-testid="stSidebar"] { width: 150px !important; min-width: 150px !important; }
@@ -141,7 +148,7 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
 }
 
 .habit-avatar {
-    width: 80px; height: 80px;
+    width: 70px; height: 70px; /* Чуть меньше для 4-х в ряд */
     border-radius: 50%;
     background: #B8C5D9;
     display: flex; align-items: center; justify-content: center;
@@ -149,7 +156,7 @@ header, footer, #MainMenu { visibility: hidden; display: none; }
 }
 
 .habit-name { color: #334455; font-size: 15px; font-weight: 600; text-align: center; }
-.habit-meta { color: #6B7B94; font-size: 12px; margin-top: 5px; }
+.habit-meta { color: #6b6d94; font-size: 12px; margin-top: 5px; }
 
 .progress-bar {
     position: absolute; bottom: 12px; left: 20px; right: 20px;
@@ -185,8 +192,8 @@ div.stButton > button[id^="st-key-btn_"] span {
     height: 20px !important;
 }
 
-div.stButton > button[id^="st-key-btn_info_"] { background-color: #E0E5EC !important; color: #334455 !important; }
-div.stButton > button[id^="st-key-btn_check_"] { background-color: #5B8DBE !important; color: white !important; }
+div.stButton > button[id^="st-key-btn_info_"] { background-color: #6b6d94 !important; color: #334455 !important; }
+div.stButton > button[id^="st-key-btn_check_"] { background-color: #6b6d94 !important; color: white !important; }
 div.stButton > button[id^="st-key-btn_done_"]:disabled { background-color: #4954A6 !important; color: white !important; border: none !important; }
 
 /* ---------------- ВЫБОР ИКОНКИ ПРИ СОЗДАНИИ (MATERIAL ICONS) ---------------- */
@@ -359,6 +366,8 @@ with col_c:
     if st.button("Добавить привычку", use_container_width=True, type="primary"):
         add_habit_dialog()
 
+st.markdown('<div style="margin-bottom: 70px;"></div>', unsafe_allow_html=True)
+
 # Загрузка данных
 conn = get_db_connection()
 c = conn.cursor()
@@ -372,7 +381,7 @@ habits = c.fetchall()
 conn.close()
 
 if habits:
-    cols = st.columns(3)  # Основная сетка карточек
+    cols = st.columns(4)  # Основная сетка карточек
 
     for idx, (h_id, h_name, h_dur, h_icon, h_prog, is_done) in enumerate(habits):
         progress_pct = min(100, int((h_prog / h_dur) * 100))
@@ -380,12 +389,12 @@ if habits:
         # Берем название Material иконки (если нет, ставим звездочку по умолчанию)
         icon_name = ICONS.get(h_icon, "star")
 
-        with cols[idx % 3]:
+        with cols[idx % 4]:
             # 1. HTML карточки (Теперь с тегом <i> для Material Icons)
             st.markdown(f"""
                 <div class="habit-card">
                     <div class="habit-avatar">
-                        <i class="material-icons" style="font-size:42px; color: #4954A6;">{icon_name}</i>
+                        <i class="material-icons" style="font-size:42px; color: #6b6d94;">{icon_name}</i>
                     </div>
                     <div class="habit-name">{h_name}</div>
                     <div class="habit-meta">{h_prog}/{h_dur} дн.</div>
@@ -394,7 +403,7 @@ if habits:
             """, unsafe_allow_html=True)
 
             # ИСПРАВЛЕНИЕ: Изменен вес колонок, чтобы "зажать" кнопки строго по центру под карточкой
-            b_col_space1, b_col1, b_col2, b_col_space2 = st.columns([1.5, 1, 1, 1.5])
+            b_col_space1, b_col1, b_col2, b_col_space2 = st.columns([1, 2, 2, 1])
 
             with b_col1:
                 if st.button("", icon=":material/calendar_month:", key=f"btn_info_{h_id}"):
