@@ -92,7 +92,7 @@ st.markdown("""
         text-align: center !important;
         text-transform: uppercase !important;
         margin-top: 70px !important;   
-        margin-bottom: 120px !important;
+        margin-bottom: 100px !important;
     }
 
     .dev-card {
@@ -131,6 +131,35 @@ st.markdown("""
 
     .dev-role { font-family: 'Tahoma', sans-serif; font-size: 14px; color: #7F8C8D; }
     .dev-email { font-family: 'Tahoma', sans-serif; font-size: 15px; color: #4A90E2; text-decoration: none; }
+    
+    /* --- КНОПКА ПОДДЕРЖКИ --- */
+    .support-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 50px;
+        margin-bottom: 20px;
+    }
+
+    .support-btn {
+        background-color: #8fa4bc !important; /* Цвет как у сайдбара */
+        color: white !important;
+        padding: 12px 30px !important;
+        border-radius: 20px !important; /* Скругление как у плиток */
+        text-decoration: none !important;
+        font-family: 'Tahoma', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        border: none !important;
+        display: inline-block !important;
+    }
+
+    .support-btn:hover {
+        background-color: #70869d !important; /* Цвет ховера как у сайдбара */
+        transform: scale(1.05) !important;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
 
 </style>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -178,6 +207,14 @@ with col4:
     draw_contact("Рябинина Ирина", "Дизайнер", "face_3", "irina_ryabinina2007@mail.ru")
 with col5:
     draw_contact("Григорян Нарек", "Дизайнер", "face_6", "narek02112020@gmail.com")
+
+st.markdown("""
+    <div class="support-container">
+        <a href="https://messenger.online.sberbank.ru/sl/8JxgkasHxxoOHS3Rh" target="_blank" class="support-btn">
+            Поддержать создателей
+        </a>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- НЕВИДИМЫЙ СКРИПТ ДЛЯ РАБОТЫ БУФЕРА ОБМЕНА ---
 js_code = """
