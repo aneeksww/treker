@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
-import streamlit.components.v1 as components  # Добавили импорт компонентов
+import streamlit.components.v1 as components
+import base64
 
 st.set_page_config(page_title="Контакты", layout="wide", initial_sidebar_state="expanded")
 
@@ -13,12 +14,20 @@ def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
 
 
+def img_to_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+img3 = img_to_base64("styles/call.png")
+
 # ТВОИ СТИЛИ (остались без изменений, убрал только тег <script> из markdown)
 st.markdown("""
 <style>
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 0rem !important;
+        position: relative;
     }
 
     [data-testid="stVerticalBlock"] > div:first-child {
@@ -131,7 +140,7 @@ st.markdown("""
 
     .dev-role { font-family: 'Tahoma', sans-serif; font-size: 14px; color: #7F8C8D; }
     .dev-email { font-family: 'Tahoma', sans-serif; font-size: 15px; color: #4A90E2; text-decoration: none; }
-    
+
     /* --- КНОПКА ПОДДЕРЖКИ --- */
     .support-container {
         display: flex;
@@ -159,6 +168,19 @@ st.markdown("""
         background-color: #70869d !important; /* Цвет ховера как у сайдбара */
         transform: scale(1.05) !important;
         box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
+
+    .img3 {
+        position: absolute;
+        bottom: 380px; /* Оставил примерно твою высоту над нижним рядом */
+        left: 50%; /* Двигаем начало картинки на центр экрана */
+        transform: translateX(-50%); /* Сдвигаем саму картинку влево на половину её ширины */
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .img3 img {
+        width: 185px !important;
     }
 
 </style>
@@ -194,12 +216,13 @@ def draw_contact(name, role, icon, email):
     """, unsafe_allow_html=True)
 
 
-_, col1, col2, _ = st.columns([1.5, 2, 2, 1.5])
-with col1:
+col0, col1, col2 = st.columns(3)
+with col0:
     draw_contact("Самохвалов Семен", "Разработчик", "face", "scpsosat837@gmail.com")
+
 with col2:
     draw_contact("Кис Анна", "Разработчик", "face_2", "a-kisanna@yandex.ru")
-
+st.markdown("<br>", unsafe_allow_html=True)
 col3, col4, col5 = st.columns(3)
 with col3:
     draw_contact("Еганова Анастасия", "Менеджер команды", "face_4", "eganova.nastyaa@gmail.com")
@@ -263,5 +286,12 @@ js_code = """
     setInterval(attachCopyEvents, 1000);
 </script>
 """
+
+st.markdown(f"""
+    <div class="img3">
+        <img src="data:image/png;base64,{img3}">
+    </div>
+""", unsafe_allow_html=True)
+
 # Вставляем скрипт так, чтобы Streamlit его не вырезал (высота 0 делает его невидимым)
 components.html(js_code, height=0, width=0)
