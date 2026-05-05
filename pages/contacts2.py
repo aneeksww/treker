@@ -13,9 +13,11 @@ if "user" not in st.session_state:
 def get_db_connection():
     return sqlite3.connect('treker_bd.db', check_same_thread=False)
 
+
 def img_to_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
+
 
 img3 = img_to_base64("styles/call.png")
 
@@ -138,12 +140,12 @@ st.markdown("""
 
     .dev-role { font-family: 'Tahoma', sans-serif; font-size: 14px; color: #7F8C8D; }
     .dev-email { font-family: 'Tahoma', sans-serif; font-size: 15px; color: #4A90E2; text-decoration: none; }
-    
+
     /* --- КНОПКА ПОДДЕРЖКИ --- */
     .support-container {
         display: flex;
         justify-content: center;
-        margin-top: 50px;
+        margin-top: 30px;
         margin-bottom: 20px;
     }
 
@@ -167,15 +169,16 @@ st.markdown("""
         transform: scale(1.05) !important;
         box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
     }
-    
+
     .img3 {
         position: absolute;
-        bottom: 400px;
-        right: 495px;
+        bottom: 380px; /* Оставил примерно твою высоту над нижним рядом */
+        left: 50%; /* Двигаем начало картинки на центр экрана */
+        transform: translateX(-50%); /* Сдвигаем саму картинку влево на половину её ширины */
         z-index: 1;
         pointer-events: none;
     }
-    
+
     .img3 img {
         width: 185px !important;
     }
